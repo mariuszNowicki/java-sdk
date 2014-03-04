@@ -14,16 +14,18 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.logging.Logger;
+import java.util.NoSuchElementException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.net.ssl.SSLContext;
 
+import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
 import net.minidev.json.JSONValue;
 
 import org.apache.commons.codec.binary.Base64;
+import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.ClientProtocolException;
@@ -46,34 +48,166 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 
-
 public abstract class Connector {
 
+	// fields for the instance of Connector
 	protected String baseUrl;
 	protected String version;
 
-	private final static Logger logger = Logger.getLogger(Connector.class
-			.getName());
-
-	protected static String oauthUrl;
-	private static String clientId;
-	private static String clientSecret;
-	private static long currentTokenTime = new Date().getTime() - 1;
-	private static String currentToken = "";
-
-	private static SSLConnectionSocketFactory sslsf = null;
+	// static fields for authentication
+	protected String oauthUrl;
+	protected String clientId = null;
+	protected String clientSecret = null;
+	protected long currentTokenTime = new Date().getTime() - 1;
+	protected String currentToken = "";
+	private SSLConnectionSocketFactory sslsf = null;
 
 	/**
-	 * Used to setup the ssl context
+	 * Basic constructor, requires setup.
+	 * 
+	 * @param baseUrl
+	 *            - base isaacloud api url
+	 * @param oauthUrl
+	 *            - isaacloud oauth url
+	 * @param version
+	 *            - isaacloud api version
+	 * @param config
+	 *            - configuration with client id and version
 	 */
-	protected void setupSSL() {
+	public Connector(String baseUrl, String oauthUrl, String version,
+			Map<String, String> config) {
 
+		setupSSL();
+
+		this.baseUrl = baseUrl + "/" + version;
+
+		this.oauthUrl = oauthUrl;
+
+		this.version = version;
+
+		if (config.containsKey("clientId"))
+			this.clientId = config.get("clientId");
+
+		if (config.containsKey("secret"))
+			this.clientSecret = config.get("secret");
+
+	}
+
+	/**
+	 * Creates a HttpPost object to be sent to oauth
+	 * 
+	 * @return
+	 * @throws UnsupportedEncodingException
+	 */
+	private HttpPost getAuthenticationPost()
+			throws UnsupportedEncodingException {
+
+		HttpPost method = new HttpPost(this.oauthUrl + "/token");
+
+		method.addHeader(
+				"Authorization",
+				"Basic "
+						+ new String(
+								Base64.encodeBase64((this.clientId + ":" + this.clientSecret)
+										.getBytes())));
+
+		List<NameValuePair> urlParameters = new ArrayList<NameValuePair>();
+
+		urlParameters.add(new BasicNameValuePair("grant_type",
+				"client_credentials"));
+		try {
+			method.setEntity(new UrlEncodedFormEntity(urlParameters));
+		} catch (UnsupportedEncodingException e) {
+			// @TODO listener pattern
+			throw e;
+		}
+
+		return method;
+	}
+
+	/**
+	 * Analyze response and get the token.
+	 * 
+	 * @param response
+	 *            - from call execution.
+	 * @return token as String
+	 * @throws IOException
+	 *             - in case the response had an error
+	 */
+	private String consumeResponse(CloseableHttpResponse response)
+			throws IOException {
+
+		StringBuffer result = new StringBuffer();
+
+		HttpEntity entity1 = response.getEntity();
+
+		BufferedReader rd = new BufferedReader(new InputStreamReader(
+				entity1.getContent()));
+
+		String line = "";
+		while ((line = rd.readLine()) != null) {
+			result.append(line);
+		}
+
+		EntityUtils.consume(entity1);
+		response.close();
+
+		int status = response.getStatusLine().getStatusCode();
+
+		if (status != 200) {
+			if (this.clientSecret == null)
+				throw new IllegalArgumentException("Client secret not set.");
+			else if (this.clientId == null)
+				throw new IllegalArgumentException("Client id not set.");
+			else
+				new Exception(
+						"Could not get authorization token from oauth server.");
+		}
+
+		JSONObject obj = (JSONObject) JSONValue.parse(result.toString());
+
+		return obj.get("access_token").toString();
+	}
+
+	/**
+	 * Get the token, if it's outdated then retrieve it from the server.
+	 * 
+	 * @return token value.
+	 * @throws ClientProtocolException
+	 * @throws IOException
+	 */
+	protected String getAuthentication() throws IOException {
+
+		// check current time
+		long currentTime = System.currentTimeMillis();
+
+		if (currentTime > this.currentTokenTime) {
+
+			// setup client
+			CloseableHttpClient client = HttpClients.custom()
+					.setSSLSocketFactory(sslsf).build();
+
+			CloseableHttpResponse response = client
+					.execute(getAuthenticationPost());
+
+			this.currentToken = consumeResponse(response);
+
+			this.currentTokenTime = currentTime + 3600 * 1000;
+		}
+		return "Bearer " + currentToken;
+	}
+
+	/**
+	 * Used to setup the ssl context.
+	 */
+	private void setupSSL() {
+
+		CertificateFactory cf;
 		try {
 
-			CertificateFactory cf;
-
-			// Load trusted IsaaCloud certificate
+			// load trusted IsaaCloud certificate
 			cf = CertificateFactory.getInstance("X.509");
+
 			InputStream caInput = new BufferedInputStream(getClass()
 					.getClassLoader().getResource("isaacloud.cert")
 					.openStream());
@@ -88,12 +222,12 @@ public abstract class Connector {
 
 			keyStore.setCertificateEntry("ca", ca);
 
-			// Trust own CA and all self-signed certs
+			// trust own CA and all self-signed certs
 			SSLContext sslcontext = SSLContexts.custom()
 					.loadTrustMaterial(keyStore, new TrustSelfSignedStrategy())
 					.build();
 
-			// Allow TLSv1 protocol only
+			// allow TLSv1 protocol only
 			sslsf = new SSLConnectionSocketFactory(
 					sslcontext,
 					new String[] { "TLSv1" },
@@ -106,208 +240,126 @@ public abstract class Connector {
 	}
 
 	/**
+	 * Make a request and write to the string. *
 	 * 
-	 * @param baseUrl
-	 * @param oauthUrl
-	 * @param version
-	 * @param config
-	 */
-	public Connector(String baseUrl, String oauthUrl, String version,
-			Map<String, String> config) {
-
-		setupSSL();
-
-		this.baseUrl = baseUrl + "/" + version;
-
-		Connector.oauthUrl = oauthUrl;
-
-		this.setVersion(version);
-
-		if (config.containsKey("clientId")) {
-			Connector.clientId = config.get("clientId");
-
-		} else {
-			// should be logged
-			logger.severe("Did not define clientId");
-		}
-
-		if (config.containsKey("secret")) {
-			// should be logged
-			Connector.clientSecret = config.get("secret");
-		} else {
-			logger.severe("Did not define secret");
-		}
-
-	}
-
-	/**
-	 * Get the token, if it's outdated then retrieve it from the server.
-	 * 
-	 * @return Autroization value.
-	 * @throws ClientProtocolException
+	 * @param request
+	 *            method with parameters.
+	 * @return response object as String
 	 * @throws IOException
+	 * @throws IllegalStateException
 	 */
-	protected static String getAuthentication() {
-		// Check the time
-		long currentTime = System.currentTimeMillis();
-
-		if (currentTime > Connector.currentTokenTime) {
-
-			Connector.currentTokenTime = currentTime + 3600 * 1000;
-			HttpPost method = new HttpPost(Connector.oauthUrl + "/token");
-			method.addHeader(
-					"Authorization",
-					"Basic "
-							+ new String(
-									Base64.encodeBase64((Connector.clientId
-											+ ":" + Connector.clientSecret)
-											.getBytes())));
-
-			List<NameValuePair> urlParameters = new ArrayList<NameValuePair>();
-			urlParameters.add(new BasicNameValuePair("grant_type",
-					"client_credentials"));
-			try {
-				method.setEntity(new UrlEncodedFormEntity(urlParameters));
-			} catch (UnsupportedEncodingException e) {
-				e.printStackTrace();
-			}
-
-			CloseableHttpClient client = HttpClients.custom()
-					.setSSLSocketFactory(sslsf).build();
-
-			StringBuffer result = new StringBuffer();
-
-			try {
-
-				CloseableHttpResponse response = client.execute(method);
-
-				HttpEntity entity1 = response.getEntity();
-
-				BufferedReader rd = new BufferedReader(new InputStreamReader(
-						entity1.getContent()));
-
-				String line = "";
-				while ((line = rd.readLine()) != null) {
-					result.append(line);
-				}
-
-				EntityUtils.consume(entity1);
-				response.close();
-
-				int status = response.getStatusLine().getStatusCode();
-
-				if (status != 200) {
-					if (result.toString().trim().length() == 0)
-						logger.severe("Call was unsuccessful, code returned:\n"
-								+ response.getStatusLine());
-					else
-						logger.severe("Call was unsuccessful, code returned:\n"
-								+ response.getStatusLine() + "\nReason: \n"
-								+ result);
-					return "Bearer " + currentToken;
-				}
-
-				JSONObject obj = (JSONObject) JSONValue.parse(result.toString());
-
-				Connector.currentToken = obj.get("access_token").toString();
-
-			} catch (Exception e) {
-				logger.severe("Error retrieving access token, reason:\n"
-						+ e.getMessage());
-			}
-
-		}
-		return "Bearer " + currentToken;
-	}
-
-	/**
-	 * Make a request and write the string
-	 * 
-	 * @param method
-	 * @return
-	 */
-	private String makeRequest(HttpUriRequest method) {
+	private Response makeRequest(HttpUriRequest method)
+			throws IllegalStateException, IOException {
 
 		CloseableHttpClient client = HttpClients.custom()
 				.setSSLSocketFactory(sslsf).build();
 
 		StringBuffer result = new StringBuffer();
-		try {
 
-			CloseableHttpResponse response = client.execute(method);
+		CloseableHttpResponse response = client.execute(method);
 
-			HttpEntity entity1 = response.getEntity();
+		HttpEntity entity1 = response.getEntity();
 
-			int status = response.getStatusLine().getStatusCode();
+		int status = response.getStatusLine().getStatusCode();
 
-			BufferedReader rd = new BufferedReader(new InputStreamReader(
-					entity1.getContent()));
+		BufferedReader rd = new BufferedReader(new InputStreamReader(
+				entity1.getContent()));
 
-			String line = "";
+		String line = "";
 
-			while ((line = rd.readLine()) != null) {
-				result.append(line);
-			}
-
-			EntityUtils.consume(entity1);
-
-			response.close();
-
-			if (status != 200 && status != 201) {
-				if (result.toString().trim().length() == 0)
-					logger.warning("Call was unsuccessful, code returned:\n"
-							+ response.getStatusLine());
-				else
-					logger.warning("Call was unsuccessful, code returned:\n"
-							+ response.getStatusLine() + "\nReason: \n"
-							+ result);
-				return "{}";
-			}
-
-		} catch (Exception e) {
-			logger.severe("Could not retrieve result, reason:\n"
-					+ e.getMessage());
+		while ((line = rd.readLine()) != null) {
+			result.append(line);
 		}
 
-		return result.toString();
+		EntityUtils.consume(entity1);
+
+		Header[] paginator = response.getHeaders("Collection-Paginator");
+
+		response.close();
+
+		if (status != 200 && status != 201) {
+			if (status == 404)
+				throw new NoSuchElementException(
+						"Element you requested was not found");
+			// else @TODO
+		}
+
+		if (paginator.length > 0) {
+			System.out.println(paginator[0]);
+
+			JSONObject paginatorObject = (JSONObject) JSONValue
+					.parse(paginator[0].getValue());
+			System.out.println(paginatorObject);
+			JSONArray obj = (JSONArray) JSONValue.parse(result.toString());
+			return new ListResponse(obj, 
+					(int) paginatorObject.get("total"),
+					(int) paginatorObject.get("limit"),
+					(int) paginatorObject.get("offset"));
+		} else {
+
+			JSONObject obj = (JSONObject) JSONValue.parse(result.toString());
+
+			return new SimpleResponse(obj);
+		}
+
 	}
 
 	/**
+	 * Prepares the url with parameters.
 	 * 
-	 * @param method
-	 * @param uri
+	 * @param wholeUri
 	 * @param parameters
 	 * @return
-	 * @throws IOException
-	 * @throws ClientProtocolException
 	 */
-	public String callService(String uri, String methodName,
-			Map<String, Object> parameters, String body) {
-
-		String wholeUri = this.baseUrl + uri;
-
+	private String prepareUrl(String wholeUri, Map<String, Object> parameters) {
 		String regex = "\\{[a-zA-Z0-9,]+\\}";
 
 		Pattern pattern = Pattern.compile(regex);
 		Matcher matcher = pattern.matcher(wholeUri);
+
 		while (matcher.find()) {
+
 			String id = matcher.group();
 			String tmp = id.replace("{", "");
 			tmp = tmp.replace("}", "");
+
 			if (parameters.containsKey(tmp)) {
 				String rep = parameters.get(tmp).toString();
 				wholeUri = wholeUri.replace(id, rep);
 				parameters.remove(tmp);
 			}
+
 		}
 
 		String and = "?";
+
 		for (Entry<String, Object> entry : parameters.entrySet()) {
 			if (entry.getValue() != null)
 				wholeUri = wholeUri + and + entry.getKey() + "="
 						+ entry.getValue();
 			and = "&";
 		}
+
+		return wholeUri;
+	}
+
+	/**
+	 * Constructs a request and send it.
+	 * 
+	 * @param method
+	 *            - method type as lowercase (get,post,patch,put,delete)
+	 * @param uri
+	 *            - uri of the resource
+	 * @param parameters
+	 *            - additional parameters
+	 * @return response as String
+	 * @throws IOException
+	 * @throws ClientProtocolException
+	 */
+	public Response callService(String uri, String methodName,
+			Map<String, Object> parameters, String body) throws IOException {
+
+		String wholeUri = prepareUrl(this.baseUrl + uri, parameters);
 
 		HttpUriRequest method = null;
 
@@ -322,9 +374,10 @@ public abstract class Connector {
 		} else if ("patch".equals(methodName)) {
 			method = new HttpPatch(wholeUri);
 		} else
-			return "Method not supported";
+			throw new UnsupportedOperationException(methodName
+					+ " is not supported.");
 
-		method.addHeader("Authorization", Connector.getAuthentication());
+		method.addHeader("Authorization", this.getAuthentication());
 
 		if (body != null) {
 			method.addHeader("Content-Type", "application/json charset=utf-8");
@@ -334,7 +387,7 @@ public abstract class Connector {
 							ContentType.APPLICATION_JSON));
 		}
 
-		String result = this.makeRequest(method);
+		Response result = this.makeRequest(method);
 
 		return result;
 	}

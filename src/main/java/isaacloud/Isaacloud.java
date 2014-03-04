@@ -1,6 +1,6 @@
 package isaacloud;
 
-import java.util.HashMap;
+import java.io.IOException;
 import java.util.Map;
 
 public class Isaacloud extends Connector {
@@ -22,8 +22,9 @@ public class Isaacloud extends Connector {
 	 * @param parameters
 	 * @param body
 	 * @return api json response
+	 * @throws IOException 
 	 */
-	public String api(String uri,String method,HashMap<String,Object> parameters, String body){
+	public Response api(String uri,String method,Map<String,Object> parameters, String body) throws IOException{
 		return this.callService(uri, method, parameters, body);
 	}
 	
@@ -40,7 +41,7 @@ public class Isaacloud extends Connector {
      * @return oauth url
      */
     public String getOauthUrl() {
-        return Isaacloud.oauthUrl;
+        return oauthUrl;
     }
     
     /**
@@ -54,9 +55,10 @@ public class Isaacloud extends Connector {
     /**
      * Get token
      * @return type
+     * @throws IOException 
      */
-    public String getToken(){
-       return Isaacloud.getAuthentication(); 
+    public String getToken() throws IOException{
+       return getAuthentication(); 
     }
     
 }
