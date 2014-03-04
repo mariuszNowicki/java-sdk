@@ -17,7 +17,12 @@ import java.util.Map.Entry;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 import javax.net.ssl.SSLContext;
+
+import net.minidev.json.JSONObject;
+import net.minidev.json.JSONValue;
+
 import org.apache.commons.codec.binary.Base64;
 import org.apache.http.HttpEntity;
 import org.apache.http.NameValuePair;
@@ -40,16 +45,17 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
-import org.json.JSONObject;
+
 
 public abstract class Connector {
 
-	private String baseUrl;
-	private String version;
+	protected String baseUrl;
+	protected String version;
 
 	private final static Logger logger = Logger.getLogger(Connector.class
 			.getName());
-	private static String oauthUrl;
+
+	protected static String oauthUrl;
 	private static String clientId;
 	private static String clientSecret;
 	private static long currentTokenTime = new Date().getTime() - 1;
@@ -58,40 +64,34 @@ public abstract class Connector {
 	private static SSLConnectionSocketFactory sslsf = null;
 
 	/**
-	 * 
-	 * @param baseUrl
-	 * @param oauthUrl
-	 * @param version
-	 * @param config
+	 * Used to setup the ssl context
 	 */
-	public Connector(String baseUrl, String oauthUrl, String version,
-			Map<String, String> config) {
+	protected void setupSSL() {
 
-		CertificateFactory cf;
-		// Setup ssl context
 		try {
+
+			CertificateFactory cf;
 
 			// Load trusted IsaaCloud certificate
 			cf = CertificateFactory.getInstance("X.509");
-			InputStream caInput = new BufferedInputStream(getClass().getClassLoader()
-					.getResource("isaacloud.cert").openStream());
-			
+			InputStream caInput = new BufferedInputStream(getClass()
+					.getClassLoader().getResource("isaacloud.cert")
+					.openStream());
+
 			Certificate ca = cf.generateCertificate(caInput);
-			
+
 			caInput.close();
-			
-			KeyStore keyStore = KeyStore.getInstance(KeyStore
-					.getDefaultType());
+
+			KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
 
 			keyStore.load(null, null);
 
 			keyStore.setCertificateEntry("ca", ca);
-			
+
 			// Trust own CA and all self-signed certs
-			SSLContext sslcontext = SSLContexts
-					.custom()
-					.loadTrustMaterial(keyStore,
-							new TrustSelfSignedStrategy()).build();
+			SSLContext sslcontext = SSLContexts.custom()
+					.loadTrustMaterial(keyStore, new TrustSelfSignedStrategy())
+					.build();
 
 			// Allow TLSv1 protocol only
 			sslsf = new SSLConnectionSocketFactory(
@@ -103,9 +103,24 @@ public abstract class Connector {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+	}
+
+	/**
+	 * 
+	 * @param baseUrl
+	 * @param oauthUrl
+	 * @param version
+	 * @param config
+	 */
+	public Connector(String baseUrl, String oauthUrl, String version,
+			Map<String, String> config) {
+
+		setupSSL();
+
 		this.baseUrl = baseUrl + "/" + version;
 
 		Connector.oauthUrl = oauthUrl;
+
 		this.setVersion(version);
 
 		if (config.containsKey("clientId")) {
@@ -113,14 +128,14 @@ public abstract class Connector {
 
 		} else {
 			// should be logged
-			System.out.println("Did not define clientId");
+			logger.severe("Did not define clientId");
 		}
 
 		if (config.containsKey("secret")) {
 			// should be logged
 			Connector.clientSecret = config.get("secret");
 		} else {
-			System.out.println("Did not define secret");
+			logger.severe("Did not define secret");
 		}
 
 	}
@@ -134,7 +149,7 @@ public abstract class Connector {
 	 */
 	protected static String getAuthentication() {
 		// Check the time
-		long currentTime = new Date().getTime();
+		long currentTime = System.currentTimeMillis();
 
 		if (currentTime > Connector.currentTokenTime) {
 
@@ -192,7 +207,7 @@ public abstract class Connector {
 					return "Bearer " + currentToken;
 				}
 
-				JSONObject obj = new JSONObject(result.toString());
+				JSONObject obj = (JSONObject) JSONValue.parse(result.toString());
 
 				Connector.currentToken = obj.get("access_token").toString();
 
@@ -295,6 +310,7 @@ public abstract class Connector {
 		}
 
 		HttpUriRequest method = null;
+
 		if ("get".equals(methodName)) {
 			method = new HttpGet(wholeUri);
 		} else if ("delete".equals(methodName)) {
