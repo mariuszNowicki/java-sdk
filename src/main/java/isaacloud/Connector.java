@@ -285,11 +285,9 @@ public abstract class Connector {
 		}
 
 		if (paginator.length > 0) {
-			System.out.println(paginator[0]);
 
 			JSONObject paginatorObject = (JSONObject) JSONValue
 					.parse(paginator[0].getValue());
-			System.out.println(paginatorObject);
 			JSONArray obj = (JSONArray) JSONValue.parse(result.toString());
 			return new ListResponse(obj, 
 					(int) paginatorObject.get("total"),
