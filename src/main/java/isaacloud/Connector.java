@@ -14,7 +14,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.NoSuchElementException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -48,35 +47,31 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 
-class BadRequestException extends Exception{
-	private static final long serialVersionUID = 1L;
-	}
-
 public abstract class Connector {
 
 	// fields for the instance of Connector
 	protected String baseUrl;
 	protected String version;
+	private SSLConnectionSocketFactory sslsf = null;
 
-	// static fields for authentication
+	// fields for authentication
 	protected String oauthUrl;
 	protected String clientId = null;
 	protected String clientSecret = null;
 	protected long currentTokenTime = new Date().getTime() - 1;
 	protected String currentToken = "";
-	private SSLConnectionSocketFactory sslsf = null;
 
 	/**
 	 * Basic constructor, requires setup.
 	 * 
 	 * @param baseUrl
-	 *            - base isaacloud api url
+	 *            base isaacloud api url
 	 * @param oauthUrl
-	 *            - isaacloud oauth url
+	 *            isaacloud oauth url
 	 * @param version
-	 *            - isaacloud api version
+	 *            isaacloud api version
 	 * @param config
-	 *            - configuration with client id and version
+	 *            configuration with client id and version
 	 */
 	public Connector(String baseUrl, String oauthUrl, String version,
 			Map<String, String> config) {
@@ -100,11 +95,10 @@ public abstract class Connector {
 	/**
 	 * Creates a HttpPost object to be sent to oauth
 	 * 
-	 * @return
+	 * @return HTTPPost to Oauth
 	 * @throws UnsupportedEncodingException
 	 */
-	private HttpPost getAuthenticationPost()
-			throws UnsupportedEncodingException {
+	private HttpPost getAuthenticationPost() {
 
 		HttpPost method = new HttpPost(this.oauthUrl + "/token");
 
@@ -123,7 +117,8 @@ public abstract class Connector {
 			method.setEntity(new UrlEncodedFormEntity(urlParameters));
 		} catch (UnsupportedEncodingException e) {
 			// @TODO listener pattern
-			throw e;
+			// this should never throw any exceptions
+
 		}
 
 		return method;
@@ -133,13 +128,14 @@ public abstract class Connector {
 	 * Analyze response and get the token.
 	 * 
 	 * @param response
-	 *            - from call execution.
+	 *            from call execution.
 	 * @return token as String
 	 * @throws IOException
-	 *             - in case the response had an error
+	 *             in case the response had an error
+	 * @throws IsaacloudConnectionException
 	 */
 	private String consumeResponse(CloseableHttpResponse response)
-			throws IOException {
+			throws IOException, IsaacloudConnectionException {
 
 		StringBuffer result = new StringBuffer();
 
@@ -159,13 +155,18 @@ public abstract class Connector {
 		int status = response.getStatusLine().getStatusCode();
 
 		if (status != 200) {
+			JSONObject error = (JSONObject) JSONValue.parse(result.toString());
+
 			if (this.clientSecret == null)
 				throw new IllegalArgumentException("Client secret not set.");
 			else if (this.clientId == null)
 				throw new IllegalArgumentException("Client id not set.");
+			else if (status == 401)
+				throw new UnauthorizedException(error);
+			else if (status == 403)
+				throw new ForbiddenException(error);
 			else
-				new Exception(
-						"Could not get authorization token from oauth server.");
+				throw new IsaacloudConnectionException(error);
 		}
 
 		JSONObject obj = (JSONObject) JSONValue.parse(result.toString());
@@ -179,8 +180,10 @@ public abstract class Connector {
 	 * @return token value.
 	 * @throws ClientProtocolException
 	 * @throws IOException
+	 * @throws IsaacloudConnectionException
 	 */
-	protected String getAuthentication() throws IOException {
+	protected String getAuthentication() throws IOException,
+			IsaacloudConnectionException {
 
 		// check current time
 		long currentTime = System.currentTimeMillis();
@@ -251,10 +254,10 @@ public abstract class Connector {
 	 * @return response object as String
 	 * @throws IOException
 	 * @throws IllegalStateException
-	 * @throws BadRequestException 
+	 * @throws BadRequestException
 	 */
-	private Response makeRequest(HttpUriRequest method)
-			throws IllegalStateException, IOException, BadRequestException {
+	private Response makeRequest(HttpUriRequest method) throws IOException,
+			IsaacloudConnectionException {
 
 		CloseableHttpClient client = HttpClients.custom()
 				.setSSLSocketFactory(sslsf).build();
@@ -283,11 +286,22 @@ public abstract class Connector {
 		response.close();
 
 		if (status != 200 && status != 201) {
+			JSONObject error = (JSONObject) JSONValue.parse(result.toString());
 			if (status == 404)
-				throw new NoSuchElementException(
-						"Element you requested was not found");
-			else if (status == 500) throw new IOException("Internal server error. Could not retrieve results. \n message was : \n" + result.toString());
-			else if (status == 400) throw new BadRequestException();
+				throw new NotFoundException(error);
+			else if (status == 500)
+				throw new InternalServerException(error);
+			else if (status == 400)
+				throw new BadRequestException(error);
+			else if (status == 401)
+				throw new UnauthorizedException(error);
+			else if (status == 403)
+				throw new ForbiddenException(error);
+			else if (status == 402)
+				throw new PaymentRequiredException(error);
+			else
+				throw new IsaacloudConnectionException(
+						(JSONObject) JSONValue.parse(result.toString()));
 		}
 
 		if (paginator.length > 0) {
@@ -295,10 +309,10 @@ public abstract class Connector {
 			JSONObject paginatorObject = (JSONObject) JSONValue
 					.parse(paginator[0].getValue());
 			JSONArray obj = (JSONArray) JSONValue.parse(result.toString());
-			return new ListResponse(obj,
-					Integer.parseInt(paginatorObject.get("total").toString()),					
-					Integer.parseInt(paginatorObject.get("limit").toString()),
-					Integer.parseInt(paginatorObject.get("offset").toString()));
+			return new ListResponse(obj, Integer.parseInt(paginatorObject.get(
+					"total").toString()), Integer.parseInt(paginatorObject.get(
+					"limit").toString()), Integer.parseInt(paginatorObject.get(
+					"offset").toString()));
 		} else {
 
 			JSONObject obj = (JSONObject) JSONValue.parse(result.toString());
@@ -358,12 +372,13 @@ public abstract class Connector {
 	 *            - additional parameters
 	 * @return response as String
 	 * @throws IOException
-	 * @throws BadRequestException 
-	 * @throws IllegalStateException 
+	 * @throws BadRequestException
+	 * @throws IllegalStateException
 	 * @throws ClientProtocolException
 	 */
 	public Response callService(String uri, String methodName,
-			Map<String, Object> parameters, JSONObject body) throws IOException, IllegalStateException, BadRequestException {
+			Map<String, Object> parameters, JSONObject body)
+			throws IsaacloudConnectionException, IOException {
 
 		String wholeUri = prepareUrl(this.baseUrl + uri, parameters);
 

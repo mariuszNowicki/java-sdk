@@ -17,7 +17,6 @@ public class Isaacloud extends Connector {
 	public Isaacloud(Map<String, String> config) {
 		super("https://api.isaacloud.com", "https://oauth.isaacloud.com", "v1",
 				config);
-
 	}
 
 	/**
@@ -29,16 +28,16 @@ public class Isaacloud extends Connector {
 	 * @param body
 	 * @return api json response
 	 * @throws IOException
-	 * @throws BadRequestException 
-	 * @throws IllegalStateException 
+	 * @throws IsaacloudConnectionException
 	 */
 	public Response api(String uri, String method,
-			Map<String, Object> parameters, JSONObject body) throws IOException, IllegalStateException, BadRequestException {
+			Map<String, Object> parameters, JSONObject body)
+			throws IOException, IsaacloudConnectionException {
 		return this.callService(uri, method, parameters, body);
 	}
 
 	/**
-	 * Push new event into Queue
+	 * Push new event into Queue.
 	 * 
 	 * @param subjectId
 	 * @param subjectType
@@ -46,25 +45,33 @@ public class Isaacloud extends Connector {
 	 * @param sourceId
 	 * @param type
 	 * @param body
-	 * @return 
+	 * @return
 	 * @throws IOException
-	 * @throws BadRequestException 
-	 * @throws IllegalStateException 
+	 * @throws BadRequestException
+	 * @throws IllegalStateException
 	 */
 	public Response event(long subjectId, String subjectType, String priority,
-			long sourceId, String type, JSONObject body) throws IOException, IllegalStateException, BadRequestException {
+			long sourceId, String type, JSONObject body) throws IOException,
+			IsaacloudConnectionException {
 
-		// Compose event
+		// compose event
 		JSONObject obj = new JSONObject();
-		obj.put("body", body);
-		obj.put("priority", priority);
+		if (body != null)
+			obj.put("body", body);
+		if (priority != null)
+			obj.put("priority", priority);
+
 		obj.put("sourceId", sourceId);
 		obj.put("subjectId", subjectId);
-		obj.put("subjectType", subjectType);
-		obj.put("type", type);
+
+		if (subjectType != null)
+			obj.put("subjectType", subjectType);
+
+		if (type != null)
+			obj.put("type", type);
 
 		// Send event into queue
-		return  callService("/queues/events", "post",
+		return callService("/queues/events", "post",
 				new HashMap<String, Object>(), obj);
 
 	}
@@ -101,8 +108,9 @@ public class Isaacloud extends Connector {
 	 * 
 	 * @return type
 	 * @throws IOException
+	 * @throws IsaacloudConnectionException 
 	 */
-	public String getToken() throws IOException {
+	public String getToken() throws IOException, IsaacloudConnectionException {
 		return getAuthentication();
 	}
 
