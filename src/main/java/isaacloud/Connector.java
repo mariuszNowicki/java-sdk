@@ -48,6 +48,10 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 
+class BadRequestException extends Exception{
+	private static final long serialVersionUID = 1L;
+	}
+
 public abstract class Connector {
 
 	// fields for the instance of Connector
@@ -247,9 +251,10 @@ public abstract class Connector {
 	 * @return response object as String
 	 * @throws IOException
 	 * @throws IllegalStateException
+	 * @throws BadRequestException 
 	 */
 	private Response makeRequest(HttpUriRequest method)
-			throws IllegalStateException, IOException {
+			throws IllegalStateException, IOException, BadRequestException {
 
 		CloseableHttpClient client = HttpClients.custom()
 				.setSSLSocketFactory(sslsf).build();
@@ -281,7 +286,8 @@ public abstract class Connector {
 			if (status == 404)
 				throw new NoSuchElementException(
 						"Element you requested was not found");
-			// else @TODO
+			else if (status == 500) throw new IOException("Internal server error. Could not retrieve results. \n message was : \n" + result.toString());
+			else if (status == 400) throw new BadRequestException();
 		}
 
 		if (paginator.length > 0) {
@@ -289,10 +295,10 @@ public abstract class Connector {
 			JSONObject paginatorObject = (JSONObject) JSONValue
 					.parse(paginator[0].getValue());
 			JSONArray obj = (JSONArray) JSONValue.parse(result.toString());
-			return new ListResponse(obj, 
-					(int) paginatorObject.get("total"),
-					(int) paginatorObject.get("limit"),
-					(int) paginatorObject.get("offset"));
+			return new ListResponse(obj,
+					Integer.parseInt(paginatorObject.get("total").toString()),					
+					Integer.parseInt(paginatorObject.get("limit").toString()),
+					Integer.parseInt(paginatorObject.get("offset").toString()));
 		} else {
 
 			JSONObject obj = (JSONObject) JSONValue.parse(result.toString());
@@ -352,10 +358,12 @@ public abstract class Connector {
 	 *            - additional parameters
 	 * @return response as String
 	 * @throws IOException
+	 * @throws BadRequestException 
+	 * @throws IllegalStateException 
 	 * @throws ClientProtocolException
 	 */
 	public Response callService(String uri, String methodName,
-			Map<String, Object> parameters, String body) throws IOException {
+			Map<String, Object> parameters, JSONObject body) throws IOException, IllegalStateException, BadRequestException {
 
 		String wholeUri = prepareUrl(this.baseUrl + uri, parameters);
 
@@ -381,7 +389,7 @@ public abstract class Connector {
 			method.addHeader("Content-Type", "application/json charset=utf-8");
 
 			((HttpEntityEnclosingRequestBase) method)
-					.setEntity(new StringEntity(body,
+					.setEntity(new StringEntity(body.toJSONString(),
 							ContentType.APPLICATION_JSON));
 		}
 
