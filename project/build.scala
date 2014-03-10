@@ -2,13 +2,16 @@ import sbt._
 import Keys._
 import com.github.retronym.SbtOneJar
 
-object Build extends Build {
+object Build extends Build { 
+
 	
   lazy val defaultSettings =
     Defaults.defaultSettings ++
       Seq(
-        name := "isaacloud-java-sdk",
-        version := "1.0"
+        name := "isaacloud-sdk",
+        version := "0.0.2",
+        publishMavenStyle := true,
+        publishTo := Some(Resolver.file("shared-repo", Path.userHome / ".m2" / "repository" asFile))
         )
 
 
