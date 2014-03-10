@@ -2,6 +2,8 @@ package isaacloud;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -76,13 +78,13 @@ public abstract class Connector {
 	public Connector(String baseUrl, String oauthUrl, String version,
 			Map<String, String> config) {
 
-		setupSSL();
-
 		this.baseUrl = baseUrl + "/" + version;
 
 		this.oauthUrl = oauthUrl;
 
 		this.version = version;
+		
+		setupSSL();
 
 		if (config.containsKey("clientId"))
 			this.clientId = config.get("clientId");
@@ -117,7 +119,7 @@ public abstract class Connector {
 			method.setEntity(new UrlEncodedFormEntity(urlParameters));
 		} catch (UnsupportedEncodingException e) {
 			// @TODO listener pattern
-			// this should never throw any exceptions
+			// although this should never throw any exceptions
 
 		}
 
@@ -205,23 +207,14 @@ public abstract class Connector {
 	}
 
 	/**
-	 * Used to setup the ssl context.
+	 * Used to setup the ssl context. Does not throw exceptions in order to 
 	 */
 	private void setupSSL() {
-
-		CertificateFactory cf;
+		
 		try {
-
-			// load trusted IsaaCloud certificate
-			cf = CertificateFactory.getInstance("X.509");
-
-			InputStream caInput = new BufferedInputStream(getClass()
-					.getClassLoader().getResource("isaacloud.cert")
-					.openStream());
-
-			Certificate ca = cf.generateCertificate(caInput);
-
-			caInput.close();
+			
+			// get the certificate from isaacloud.com			
+			Certificate ca = SSLCertificateFactory.getCertificate(443, "isaacloud.com"); 			
 
 			KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
 
