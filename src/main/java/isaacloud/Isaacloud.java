@@ -1,6 +1,11 @@
 package isaacloud;
 
 import java.io.IOException;
+import java.net.UnknownHostException;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -13,10 +18,23 @@ public class Isaacloud extends Connector {
 	 * 
 	 * @param config
 	 *            - map that contains clientID:clientSecret
+	 * @throws IOException 
+	 * @throws KeyStoreException 
+	 * @throws CertificateException 
+	 * @throws UnknownHostException 
+	 * @throws NoSuchAlgorithmException 
+	 * @throws KeyManagementException 
 	 */
 	public Isaacloud(Map<String, String> config) {
 		super("https://api.isaacloud.com", "https://oauth.isaacloud.com", "v1",
 				config);
+		try {
+			setupSSL(null);
+		} catch (KeyManagementException | NoSuchAlgorithmException
+				| CertificateException
+				| KeyStoreException | IOException e) {
+			System.out.println("Cannot initialize SSL connection " + e.getMessage() + "\n");
+		}
 	}
 
 	/**

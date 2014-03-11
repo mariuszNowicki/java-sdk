@@ -1,16 +1,16 @@
 package isaacloud;
 
-import java.io.BufferedInputStream;
 import java.io.BufferedReader;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
+import java.net.UnknownHostException;
+import java.security.KeyManagementException;
 import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
 import java.security.cert.Certificate;
-import java.security.cert.CertificateFactory;
+import java.security.cert.CertificateException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -51,20 +51,69 @@ import org.apache.http.util.EntityUtils;
 
 public abstract class Connector {
 
-	// fields for the instance of Connector
+	// connector configuration
 	protected String baseUrl;
 	protected String version;
-	private SSLConnectionSocketFactory sslsf = null;
-
-	// fields for authentication
 	protected String oauthUrl;
 	protected String clientId = null;
 	protected String clientSecret = null;
+
+	// current state of the connection
 	protected long currentTokenTime = new Date().getTime() - 1;
 	protected String currentToken = "";
+	protected CloseableHttpClient client = null;
+	protected Certificate certificate = null;
+	
+	public Certificate getCertificate() {
+		return certificate;
+	}
+
+	public void setCertificate(Certificate certificate) {
+		this.certificate = certificate;
+	}
+
+	public CloseableHttpClient getHttpClient() {
+		return client;
+	}
+
+	public void setHttpClient(CloseableHttpClient client) {
+		this.client = client;
+	}
+
+	public long getCurrentTokenTime() {
+		return currentTokenTime;
+	}
+
+	public String getCurrentToken() {
+		return currentToken;
+	}
+
+	public String getVersion() {
+		return version;
+	}
+
+	public void setVersion(String version) {
+		this.version = version;
+	}
+
+	public String getBaseUrl() {
+		return baseUrl;
+	}
+
+	public void setBaseUrl(String baseUrl) {
+		this.baseUrl = baseUrl;
+	}
+
+	public String getOauthUrl() {
+		return oauthUrl;
+	}
+
+	public void setOauthUrl(String oauthUrl) {
+		this.oauthUrl = oauthUrl;
+	}
 
 	/**
-	 * Basic constructor, requires setup.
+	 * Basic constructor, creates basic HTTPClient without ssl.
 	 * 
 	 * @param baseUrl
 	 *            base isaacloud api url
@@ -83,14 +132,61 @@ public abstract class Connector {
 		this.oauthUrl = oauthUrl;
 
 		this.version = version;
-		
-		setupSSL();
 
 		if (config.containsKey("clientId"))
 			this.clientId = config.get("clientId");
 
 		if (config.containsKey("secret"))
 			this.clientSecret = config.get("secret");
+		
+		client = HttpClients.createDefault();
+
+	}
+
+	/**
+	 * Used to setup the ssl context. Does not throw exceptions in order to.
+	 * @param _ca
+	 * 
+	 * @throws IOException
+	 * @throws CertificateException
+	 * @throws UnknownHostException
+	 * @throws NoSuchAlgorithmException
+	 * @throws KeyManagementException
+	 * @throws KeyStoreException
+	 */
+	public CloseableHttpClient setupSSL(Certificate _ca) throws KeyManagementException,
+			NoSuchAlgorithmException, UnknownHostException,
+			CertificateException, IOException, KeyStoreException {
+
+		
+		// get the certificate from isaacloud.com
+		Certificate ca = _ca;
+
+		if (ca == null)
+			SSLCertificateFactory.getCertificate(443, "isaacloud.com");
+
+		KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
+
+		keyStore.load(null, null);
+
+		keyStore.setCertificateEntry("ca", ca);
+
+		// trust own CA and all self-signed certs
+		SSLContext sslcontext = SSLContexts.custom()
+				.loadTrustMaterial(keyStore, new TrustSelfSignedStrategy())
+				.build();
+
+		// allow TLSv1 protocol only
+		SSLConnectionSocketFactory sslConnection = new SSLConnectionSocketFactory(sslcontext,
+				new String[] { "TLSv1" }, null,
+				SSLConnectionSocketFactory.BROWSER_COMPATIBLE_HOSTNAME_VERIFIER);
+
+		client = HttpClients.custom().setSSLSocketFactory(sslConnection)
+				.build();
+		
+		certificate = ca;
+		
+		return client;
 
 	}
 
@@ -100,7 +196,7 @@ public abstract class Connector {
 	 * @return HTTPPost to Oauth
 	 * @throws UnsupportedEncodingException
 	 */
-	private HttpPost getAuthenticationPost() {
+	protected HttpPost getAuthenticationPost() {
 
 		HttpPost method = new HttpPost(this.oauthUrl + "/token");
 
@@ -136,7 +232,7 @@ public abstract class Connector {
 	 *             in case the response had an error
 	 * @throws IsaacloudConnectionException
 	 */
-	private String consumeResponse(CloseableHttpResponse response)
+	protected String consumeResponse(CloseableHttpResponse response)
 			throws IOException, IsaacloudConnectionException {
 
 		StringBuffer result = new StringBuffer();
@@ -158,12 +254,8 @@ public abstract class Connector {
 
 		if (status != 200) {
 			JSONObject error = (JSONObject) JSONValue.parse(result.toString());
-
-			if (this.clientSecret == null)
-				throw new IllegalArgumentException("Client secret not set.");
-			else if (this.clientId == null)
-				throw new IllegalArgumentException("Client id not set.");
-			else if (status == 401)
+			
+			if (status == 401)
 				throw new UnauthorizedException(error);
 			else if (status == 403)
 				throw new ForbiddenException(error);
@@ -192,10 +284,11 @@ public abstract class Connector {
 
 		if (currentTime > this.currentTokenTime) {
 
-			// setup client
-			CloseableHttpClient client = HttpClients.custom()
-					.setSSLSocketFactory(sslsf).build();
-
+			if (this.clientSecret == null)
+				throw new IllegalArgumentException("Client secret not set.");
+			else if (this.clientId == null)
+				throw new IllegalArgumentException("Client id not set.");
+			
 			CloseableHttpResponse response = client
 					.execute(getAuthenticationPost());
 
@@ -204,39 +297,6 @@ public abstract class Connector {
 			this.currentTokenTime = currentTime + 3600 * 1000;
 		}
 		return "Bearer " + currentToken;
-	}
-
-	/**
-	 * Used to setup the ssl context. Does not throw exceptions in order to 
-	 */
-	private void setupSSL() {
-		
-		try {
-			
-			// get the certificate from isaacloud.com			
-			Certificate ca = SSLCertificateFactory.getCertificate(443, "isaacloud.com"); 			
-
-			KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
-
-			keyStore.load(null, null);
-
-			keyStore.setCertificateEntry("ca", ca);
-
-			// trust own CA and all self-signed certs
-			SSLContext sslcontext = SSLContexts.custom()
-					.loadTrustMaterial(keyStore, new TrustSelfSignedStrategy())
-					.build();
-
-			// allow TLSv1 protocol only
-			sslsf = new SSLConnectionSocketFactory(
-					sslcontext,
-					new String[] { "TLSv1" },
-					null,
-					SSLConnectionSocketFactory.BROWSER_COMPATIBLE_HOSTNAME_VERIFIER);
-
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
 	}
 
 	/**
@@ -249,11 +309,8 @@ public abstract class Connector {
 	 * @throws IllegalStateException
 	 * @throws BadRequestException
 	 */
-	private Response makeRequest(HttpUriRequest method) throws IOException,
+	protected Response makeRequest(HttpUriRequest method) throws IOException,
 			IsaacloudConnectionException {
-
-		CloseableHttpClient client = HttpClients.custom()
-				.setSSLSocketFactory(sslsf).build();
 
 		StringBuffer result = new StringBuffer();
 
@@ -322,7 +379,7 @@ public abstract class Connector {
 	 * @param parameters
 	 * @return
 	 */
-	private String prepareUrl(String wholeUri, Map<String, Object> parameters) {
+	protected String prepareUrl(String wholeUri, Map<String, Object> parameters) {
 		String regex = "\\{[a-zA-Z0-9,]+\\}";
 
 		Pattern pattern = Pattern.compile(regex);
@@ -404,14 +461,6 @@ public abstract class Connector {
 		Response result = this.makeRequest(method);
 
 		return result;
-	}
-
-	public String getVersion() {
-		return version;
-	}
-
-	public void setVersion(String version) {
-		this.version = version;
 	}
 
 }

@@ -23,7 +23,9 @@ object Build extends Build {
         "Maven repository" at "http://morphia.googlecode.com/svn/mavenrepo/"),
       libraryDependencies ++= Seq(
         "org.apache.httpcomponents" % "httpclient" % "4.3.1",
-        "net.minidev" % "json-smart" % "1.1.1"
+        "net.minidev" % "json-smart" % "1.1.1",
+        "org.mockito" % "mockito-all" % "1.9.5",
+        "junit" % "junit" % "4.11"
         )))
 
 }
