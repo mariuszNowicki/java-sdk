@@ -18,7 +18,7 @@ import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
-public class SSLCertificateFactory {
+class SSLCertificateFactory {
 
 	/**
 	 * Get a current certificate from page.

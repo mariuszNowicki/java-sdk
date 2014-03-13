@@ -43,4 +43,9 @@ public class ListResponse extends Response {
 		return body;
 	}
 	
+	@Override 
+	public String toString(){
+		return body.toJSONString();
+	}
+	
 }

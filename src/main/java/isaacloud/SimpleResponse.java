@@ -25,4 +25,9 @@ public class SimpleResponse extends Response {
 		return body;
 	}
 	
+	@Override 
+	public String toString(){
+		return body.toJSONString();
+	}
+	
 }

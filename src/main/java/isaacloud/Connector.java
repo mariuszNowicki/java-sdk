@@ -49,7 +49,7 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 
-public abstract class Connector {
+abstract class Connector {
 
 	// connector configuration
 	protected String baseUrl;
