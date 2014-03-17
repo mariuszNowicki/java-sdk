@@ -18,6 +18,8 @@ import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
+import org.apache.commons.codec.binary.Base64;
+
 class SSLCertificateFactory {
 
 	/**
@@ -60,7 +62,7 @@ class SSLCertificateFactory {
 				.getPeerCertificates();
 
 		String certStr = "-----BEGIN CERTIFICATE-----\n"
-				+ new sun.misc.BASE64Encoder().encode(servercerts[0].getEncoded()) 
+				+ Base64.encodeBase64String(servercerts[0].getEncoded()) 
 				+ "\n-----END CERTIFICATE-----\n";
 
 		CertificateFactory cf = CertificateFactory.getInstance("X.509");
