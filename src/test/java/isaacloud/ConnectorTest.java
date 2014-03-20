@@ -8,7 +8,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import net.minidev.json.JSONObject;
@@ -170,7 +172,11 @@ public class ConnectorTest {
 
 		Map<String, Object> params = new HashMap<String, Object>();
 		params.put("userId", 1);
-		params.put("segments", "1,2");
+		
+		List<Long> segments = new ArrayList<Long>();
+		segments.add(new Long(1));
+		segments.add(new Long(2));
+		params.put("segments", segments);
 		params.put("groups", 1);
 		String res = connector.prepareUrl(uri, params);
 

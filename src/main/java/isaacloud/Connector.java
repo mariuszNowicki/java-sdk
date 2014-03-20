@@ -49,6 +49,8 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 
+import com.google.common.base.Joiner;
+
 abstract class Connector {
 
 	// connector configuration
@@ -63,7 +65,7 @@ abstract class Connector {
 	protected String currentToken = "";
 	protected CloseableHttpClient client = null;
 	protected Certificate certificate = null;
-	
+
 	public Certificate getCertificate() {
 		return certificate;
 	}
@@ -138,13 +140,14 @@ abstract class Connector {
 
 		if (config.containsKey("secret"))
 			this.clientSecret = config.get("secret");
-		
+
 		client = HttpClients.createDefault();
 
 	}
 
 	/**
 	 * Used to setup the ssl context. Does not throw exceptions in order to.
+	 * 
 	 * @param _ca
 	 * 
 	 * @throws IOException
@@ -154,11 +157,11 @@ abstract class Connector {
 	 * @throws KeyManagementException
 	 * @throws KeyStoreException
 	 */
-	public CloseableHttpClient setupSSL(Certificate _ca) throws KeyManagementException,
-			NoSuchAlgorithmException, UnknownHostException,
-			CertificateException, IOException, KeyStoreException {
+	public CloseableHttpClient setupSSL(Certificate _ca)
+			throws KeyManagementException, NoSuchAlgorithmException,
+			UnknownHostException, CertificateException, IOException,
+			KeyStoreException {
 
-		
 		// get the certificate from isaacloud.com
 		Certificate ca = _ca;
 
@@ -177,15 +180,15 @@ abstract class Connector {
 				.build();
 
 		// allow TLSv1 protocol only
-		SSLConnectionSocketFactory sslConnection = new SSLConnectionSocketFactory(sslcontext,
-				new String[] { "TLSv1" }, null,
+		SSLConnectionSocketFactory sslConnection = new SSLConnectionSocketFactory(
+				sslcontext, new String[] { "TLSv1" }, null,
 				SSLConnectionSocketFactory.BROWSER_COMPATIBLE_HOSTNAME_VERIFIER);
 
 		client = HttpClients.custom().setSSLSocketFactory(sslConnection)
 				.build();
-		
+
 		certificate = ca;
-		
+
 		return client;
 
 	}
@@ -254,7 +257,7 @@ abstract class Connector {
 
 		if (status != 200) {
 			JSONObject error = (JSONObject) JSONValue.parse(result.toString());
-			
+
 			if (status == 401)
 				throw new UnauthorizedException(error);
 			else if (status == 403)
@@ -288,7 +291,7 @@ abstract class Connector {
 				throw new IllegalArgumentException("Client secret not set.");
 			else if (this.clientId == null)
 				throw new IllegalArgumentException("Client id not set.");
-			
+
 			CloseableHttpResponse response = client
 					.execute(getAuthenticationPost());
 
@@ -345,9 +348,11 @@ abstract class Connector {
 				throw new BadRequestException(error);
 			else if (status == 401)
 				throw new UnauthorizedException(error);
-			else if (status == 403)
+			else if (status == 403) {
+				error.put("remark",
+						"Maybe your certificate is expired, in that case use setupSSL method.");
 				throw new ForbiddenException(error);
-			else if (status == 402)
+			} else if (status == 402)
 				throw new PaymentRequiredException(error);
 			else
 				throw new IsaacloudConnectionException(
@@ -379,6 +384,7 @@ abstract class Connector {
 	 * @param parameters
 	 * @return
 	 */
+	@SuppressWarnings("rawtypes")
 	protected String prepareUrl(String wholeUri, Map<String, Object> parameters) {
 		String regex = "\\{[a-zA-Z0-9,]+\\}";
 
@@ -402,10 +408,24 @@ abstract class Connector {
 		String and = "?";
 
 		for (Entry<String, Object> entry : parameters.entrySet()) {
-			if (entry.getValue() != null)
-				wholeUri = wholeUri + and + entry.getKey() + "="
-						+ entry.getValue();
-			and = "&";
+
+			if (entry.getValue() != null) {
+
+				wholeUri = wholeUri + and + entry.getKey() + "=";
+				Object vals = entry.getValue();
+
+				if (List.class.isAssignableFrom(vals.getClass())) {
+					wholeUri = wholeUri + Joiner.on(",").join((List) vals);
+				} else if (Map.class.isAssignableFrom(vals.getClass())) {
+					wholeUri = wholeUri
+							+ Joiner.on(",").withKeyValueSeparator(":")
+									.join((Map) vals);
+				} else {
+					wholeUri = wholeUri + vals;
+				}
+				and = "&";
+			}
+
 		}
 
 		return wholeUri;

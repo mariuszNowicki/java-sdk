@@ -25,7 +25,8 @@ object Build extends Build {
         "org.apache.httpcomponents" % "httpclient" % "4.3.1",
         "net.minidev" % "json-smart" % "1.1.1",
         "org.mockito" % "mockito-all" % "1.9.5",
-        "junit" % "junit" % "4.11"
+        "junit" % "junit" % "4.11",
+        "com.google.guava" % "guava" % "16.0.1"
         )))
 
 }
