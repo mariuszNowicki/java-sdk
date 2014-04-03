@@ -18,7 +18,7 @@ public class Admin extends Connector {
 		super("https://api.isaacloud.com", "https://oauth.isaacloud.com", "v1",
 				config);
 		try {
-			setupSSL(null);
+			setupSSL();
 		} catch (KeyManagementException | NoSuchAlgorithmException
 				| CertificateException | KeyStoreException | IOException e) {
 			System.out.println("Cannot initialize SSL connection "

@@ -18,7 +18,6 @@ import net.minidev.json.JSONObject;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.ProtocolVersion;
-import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
@@ -37,7 +36,7 @@ public class ConnectorTest {
 	static String baseApiUrl = "any";
 	static String baseOAuthUrl = "any";
 	static String version = "v1";
-	static HashMap<String, String> config = new HashMap<String, String>();
+	static HashMap<String, String> config = new HashMap<>();
 
 	static Connector connector = null;
 	static CloseableHttpResponse response = mock(CloseableHttpResponse.class);
@@ -63,12 +62,11 @@ public class ConnectorTest {
 	}
 
 	@Test
-	public void testSetupSSL() throws ClientProtocolException, Exception {
+	public void testSetupSSL() throws  Exception {
 
-		CloseableHttpClient client = connector.setupSSL(null);
+		CloseableHttpClient client = connector.setupSSL();
 
 		assert (client != null);
-		assert (connector.certificate != null);
 
 	}
 
@@ -96,7 +94,7 @@ public class ConnectorTest {
 		exception.expect(UnauthorizedException.class);
 		when(response.getStatusLine()).thenReturn(
 				new BasicStatusLine(new ProtocolVersion("", 1, 2), 401, "any"));
-		token = connector.consumeResponse(response);
+		connector.consumeResponse(response);
 
 	}
 
@@ -170,12 +168,12 @@ public class ConnectorTest {
 		String uri = "/cache/users/{userId}";
 		String expected = "/cache/users/1?segments=1,2&groups=1";
 
-		Map<String, Object> params = new HashMap<String, Object>();
+		Map<String, Object> params = new HashMap<>();
 		params.put("userId", 1);
 		
-		List<Long> segments = new ArrayList<Long>();
-		segments.add(new Long(1));
-		segments.add(new Long(2));
+		List<Long> segments = new ArrayList<>();
+		segments.add(1l);
+		segments.add(2l);
 		params.put("segments", segments);
 		params.put("groups", 1);
 		String res = connector.prepareUrl(uri, params);

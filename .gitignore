@@ -2,5 +2,7 @@
 .classpath
 .project
 .worksheet/
+*.iml
+.idea
 target
 src/main/java/Test.java
