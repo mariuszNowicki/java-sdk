@@ -1,6 +1,6 @@
 # IsaaCloud SDK for Java
 
-The IsaaCloud Android SDK can be used to access the IsaaCloud API through java. The user can make any number of request calls to the API.
+The Isaacloud Java SDK can be used to access the Isaacloud API through java. The user can make any number of request calls to the API.
 
 ## Requirements
 
