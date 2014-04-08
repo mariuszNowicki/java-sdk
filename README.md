@@ -40,40 +40,36 @@ The "isaacloud" package also contains special class Isaacloud, which could in fu
 
     or you can add as a dependency with build.scala. For example:
 
-    ```scala
+```scala
+object Build extends Build {
+    lazy val sdk = RootProject(uri("https://github.com/isaacloud/java-sdk.git#%s".format("0.0.2-RC2")))
+    lazy val defaultSettings =
+        Defaults.defaultSettings ++
+            Seq(
+                name := "play_example",
+                version := "1.0",
+                scalaVersion := "2.10.1",
+                scalacOptions := Seq(
+                    "-feature",
+                    "-language:implicitConversions",
+                    "-language:postfixOps",
+                    "-unchecked",
+                    "-deprecation",
+                    "-encoding", "utf8",
+                    "-Ywarn-adapted-args"))
 
-        object Build extends Build {
-            lazy val sdk = RootProject(uri("https://github.com/isaacloud/java-sdk.git#%s".format("0.0.2-RC2")))
-
-
-            lazy val defaultSettings =
-            Defaults.defaultSettings ++
-                Seq(
-                    name := "play_example",
-                    version := "1.0",
-                    scalaVersion := "2.10.1",
-                    scalacOptions := Seq(
-                        "-feature",
-                        "-language:implicitConversions",
-                        "-language:postfixOps",
-                        "-unchecked",
-                        "-deprecation",
-                        "-encoding", "utf8",
-                        "-Ywarn-adapted-args"))
-
-
-            lazy val root = Project("root",
-                file("."),
-                settings = defaultSettings ++ Seq(
-                resolvers ++= Seq(
-                    "Typesafe Repo" at "http://repo.typesafe.com/typesafe/releases/",
-                    "Maven repository" at "http://morphia.googlecode.com/svn/mavenrepo/"),
-                libraryDependencies ++= Seq(
-                    "net.minidev" % "json-smart" % "1.1.1"
-                    )))
-                .dependsOn(sdk)
-        }
-    ```
+    lazy val root = Project("root",
+        file("."),
+        settings = defaultSettings ++ Seq(
+        resolvers ++= Seq(
+            "Typesafe Repo" at "http://repo.typesafe.com/typesafe/releases/",
+            "Maven repository" at "http://morphia.googlecode.com/svn/mavenrepo/"),
+        libraryDependencies ++= Seq(
+            "net.minidev" % "json-smart" % "1.1.1"
+        )))
+        .dependsOn(sdk)
+}
+```
 
 ## Making request calls
 
@@ -111,6 +107,9 @@ or
 JSONArray array = (JSONArray) response.getJson()
 ```
 
+You can check whether it is an array or object using *isObject()* or *isArray()*
+
 If no detailed exception handling is required, you can simply catch the basic IsaacloudConnectionException, as shown in the sample call above. If more detailed information about the error is needed, however, there are several exception classes that extend the general IsaacloudConnectionException. Catch the detailed exception before the general one. Check isaacloud package for more details on available exceptions. Each of these exceptions can return an internal error code and message through the getInternalCode() and getMessage() methods. Reviewing these values will give you further insight on what went wrong.
+
 For detailed information about the possible uri calls, available query parameters and request methods please see our documentation:
 https://isaacloud.com/documentation
