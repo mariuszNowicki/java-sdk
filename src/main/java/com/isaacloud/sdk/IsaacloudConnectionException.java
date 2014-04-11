@@ -1,4 +1,4 @@
-package isaacloud;
+package com.isaacloud.sdk;
 
 import net.minidev.json.JSONObject;
 

@@ -1,4 +1,4 @@
-package isaacloud;
+package com.isaacloud.sdk;
 
 public abstract class Response {
 	

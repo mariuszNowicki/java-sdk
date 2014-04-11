@@ -8,6 +8,8 @@ import static org.mockito.Mockito.when;
 import java.io.IOException;
 import java.util.HashMap;
 
+import com.isaacloud.sdk.Isaacloud;
+import com.isaacloud.sdk.Response;
 import net.minidev.json.JSONObject;
 
 import org.apache.http.Header;
