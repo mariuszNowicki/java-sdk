@@ -8,16 +8,16 @@ The library works on **Java version of 1.7** and **sbt 0.13.0.**
 
 ## Basics
 
-This SDK can be used to connect to Isaacloud v1 REST API on api.isaacloud.com.
-Main classes in "isaacloud" package are Cache, Admin and Queue, which represent corresponding entities in the REST API.
-The "isaacloud" package also contains special class Isaacloud, which could in future contain more sophisticated methods for interacting with the REST API.
+This SDK can be used to connect to Isaacloud v1 REST API on api.com.isaacloud.com.
+Main classes in "com.isaacloud" package are Cache, Admin and Queue, which represent corresponding entities in the REST API.
+The "com.isaacloud" package also contains special class Isaacloud, which could in future contain more sophisticated methods for interacting with the REST API.
 
 ## How to build
 
 1. Clone repository:
 
     ```
-    git clone https://github.com/isaacloud/java-sdk.git
+    git clone https://github.com/com.isaacloud/java-sdk.git
     ```
 
 2. Enter directory:
@@ -42,7 +42,7 @@ The "isaacloud" package also contains special class Isaacloud, which could in fu
 
 ```scala
 object Build extends Build {
-    lazy val sdk = RootProject(uri("https://github.com/isaacloud/java-sdk.git#%s".format("0.0.2-RC2")))
+    lazy val sdk = RootProject(uri("https://github.com/com.isaacloud/java-sdk.git#%s".format("0.0.2-RC2")))
     lazy val defaultSettings =
         Defaults.defaultSettings ++
             Seq(
@@ -73,7 +73,7 @@ object Build extends Build {
 
 ## Making request calls
 
-Example of using the sdk:
+You can use the sdk with a concrete wrapper:
 
 ```java
 List<String> fields = new ArrayList<>();
@@ -83,11 +83,27 @@ fields.add("firstName");
 Map<String, String> order = new HashMap<>();
 order.put("email", "ASC");
 
-//config is map with "clientId" -> :your_client_id: and "secret" -> :your_client_secret:
+//config is a map with "clientId" -> :your_client_id: and "secret" -> :your_client_secret:
 Cache cache = new Cache(config);
 
 try {
     Response response = cache.getUsers(null, 0l, order, fields, null, null);
+} catch (IsaacloudConnectionException e) {
+    // handle connection exceptions here
+} catch (Exception e) {
+    e.printStackTrace();
+}
+```
+
+or alternatively use the Isaacloud api class:
+
+```java
+Map<String, String> order = new HashMap<>();
+order.put("email", "ASC");
+
+Isaacloud isaac = new Isaacloud(config);
+try {
+    Response response = isaac.path("/cache/users").withFields("email","firstName").withOrder(order).get();
 } catch (IsaacloudConnectionException e) {
     // handle connection exceptions here
 } catch (Exception e) {
@@ -109,7 +125,7 @@ JSONArray array = (JSONArray) response.getJson()
 
 You can check whether it is an array or object using *isObject()* or *isArray()*
 
-If no detailed exception handling is required, you can simply catch the basic IsaacloudConnectionException, as shown in the sample call above. If more detailed information about the error is needed, however, there are several exception classes that extend the general IsaacloudConnectionException. Catch the detailed exception before the general one. Check isaacloud package for more details on available exceptions. Each of these exceptions can return an internal error code and message through the getInternalCode() and getMessage() methods. Reviewing these values will give you further insight on what went wrong.
+If no detailed exception handling is required, you can simply catch the basic IsaacloudConnectionException, as shown in the sample call above. If more detailed information about the error is needed, however, there are several exception classes that extend the general IsaacloudConnectionException. Catch the detailed exception before the general one. Check com.isaacloud package for more details on available exceptions. Each of these exceptions can return an internal error code and message through the getInternalCode() and getMessage() methods. Reviewing these values will give you further insight on what went wrong.
 
 For detailed information about the possible uri calls, available query parameters and request methods please see our documentation:
-https://isaacloud.com/documentation
+https://com.isaacloud.com/documentation

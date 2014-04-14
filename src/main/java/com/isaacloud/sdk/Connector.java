@@ -106,9 +106,9 @@ abstract class Connector {
     /**
      * Basic constructor, creates basic HTTPClient without ssl.
      *
-     * @param baseUrl  base isaacloud api url
-     * @param oauthUrl isaacloud oauth url
-     * @param version  isaacloud api version
+     * @param baseUrl  base com.isaacloud api url
+     * @param oauthUrl com.isaacloud oauth url
+     * @param version  com.isaacloud api version
      * @param config   configuration with client id and version
      */
     public Connector(String baseUrl, String oauthUrl, String version,
@@ -126,7 +126,12 @@ abstract class Connector {
         if (config.containsKey("secret"))
             this.clientSecret = config.get("secret");
 
-        client = HttpClients.createDefault();
+        try {
+            setupSSL();
+        } catch (KeyManagementException | NoSuchAlgorithmException
+                | KeyStoreException | IOException e) {
+            System.out.println("Cannot initialize SSL connection " + e.getMessage() + "\n");
+        }
 
     }
 
@@ -141,7 +146,7 @@ abstract class Connector {
      * @throws KeyStoreException
      */
     public CloseableHttpClient setupSSL()
-            throws KeyManagementException, NoSuchAlgorithmException, CertificateException, IOException,
+            throws KeyManagementException, NoSuchAlgorithmException, IOException,
             KeyStoreException {
 
         // trust all self-signed certs

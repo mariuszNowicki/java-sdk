@@ -3,11 +3,6 @@ package com.isaacloud.sdk;
 import java.util.Map;
 import java.util.HashMap;
 import net.minidev.json.JSONObject;
-import java.io.IOException;
-import java.security.KeyManagementException;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.cert.CertificateException;
 import java.util.List;
 
 /**
@@ -15,15 +10,8 @@ import java.util.List;
 public class Queue extends Connector {
 
 	public Queue(Map<String, String> config) {
-		super("https://api.isaacloud.com", "https://oauth.isaacloud.com", "v1",
+		super("https://api.com.isaacloud.com", "https://oauth.com.isaacloud.com", "v1",
 				config);
-		try {
-			setupSSL();
-		} catch (KeyManagementException | NoSuchAlgorithmException
-				| CertificateException | KeyStoreException | IOException e) {
-			System.out.println("Cannot initialize SSL connection "
-					+ e.getMessage() + "\n");
-		}
 	}
 
 	/**

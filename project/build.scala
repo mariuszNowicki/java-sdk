@@ -1,6 +1,7 @@
 import sbt._
 import Keys._
-import com.github.retronym.SbtOneJar
+import sbtassembly.Plugin._
+import AssemblyKeys._
 
 object Build extends Build { 
 
@@ -8,7 +9,7 @@ object Build extends Build {
   lazy val defaultSettings =
     Defaults.defaultSettings ++
       Seq(
-        name := "isaacloud-sdk",
+        name := "com.isaacloud-sdk",
         version := "0.0.2",
         publishMavenStyle := true,
         publishTo := Some(Resolver.file("shared-repo", Path.userHome / ".m2" / "repository" asFile))
@@ -17,7 +18,7 @@ object Build extends Build {
 
   lazy val root = Project("root",
     file("."),
-    settings = defaultSettings ++ SbtOneJar.oneJarSettings ++ Seq(
+    settings = defaultSettings ++ assemblySettings ++ Seq(
       resolvers ++= Seq(
         "Typesafe Repo" at "http://repo.typesafe.com/typesafe/releases/",
         "Maven repository" at "http://morphia.googlecode.com/svn/mavenrepo/"),

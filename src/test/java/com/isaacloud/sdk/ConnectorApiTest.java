@@ -1,4 +1,4 @@
-package isaacloud;
+package com.isaacloud.sdk;
 
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -73,6 +73,43 @@ public class ConnectorApiTest {
 		assert (res.getJson().toString().equals(expected));
 
 	}
+
+    @Test
+    public void testCaller() throws Exception {
+
+        String expected = "{\"id\":1}";
+
+        isaacloud.client = client;
+        HttpEntity ent = new StringEntity(expected);
+
+        isaacloud.currentTokenTime = System.currentTimeMillis() + 100000;
+
+        when(response.getEntity()).thenReturn(ent);
+        when(response.getStatusLine()).thenReturn(
+                new BasicStatusLine(new ProtocolVersion("", 1, 2), 200, "any"));
+        when(response.getHeaders(anyString())).thenReturn(new Header[0]);
+
+        Response res = isaacloud.path("/cache/users").get();
+
+        assert (res.getJson().toString().equals(expected));
+
+        Response res2 = isaacloud.path("/cache/users").put(null);
+
+        assert (res2.getJson().toString().equals(expected));
+
+        Response res3 = isaacloud.path("/cache/users").delete();
+
+        assert (res3.getJson().toString().equals(expected));
+
+        Response res4 = isaacloud.path("/cache/users").patch(null);
+
+        assert (res4.getJson().toString().equals(expected));
+
+        Response res5 = isaacloud.path("/cache/users").post(null);
+        assert (res5.getJson().toString().equals(expected));
+    }
+
+
 	
 	@Test
 	public void testEvent() throws Exception {

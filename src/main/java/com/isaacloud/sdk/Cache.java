@@ -2,11 +2,6 @@ package com.isaacloud.sdk;
 
 import java.util.Map;
 import java.util.HashMap;
-import java.io.IOException;
-import java.security.KeyManagementException;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.cert.CertificateException;
 import java.util.List;
 
 /**
@@ -14,15 +9,8 @@ import java.util.List;
 public class Cache extends Connector {
 
 	public Cache(Map<String, String> config) {
-		super("https://api.isaacloud.com", "https://oauth.isaacloud.com", "v1",
+		super("https://api.com.isaacloud.com", "https://oauth.com.isaacloud.com", "v1",
 				config);
-		try {
-			setupSSL();
-		} catch (KeyManagementException | NoSuchAlgorithmException
-				| CertificateException | KeyStoreException | IOException e) {
-			System.out.println("Cannot initialize SSL connection "
-					+ e.getMessage() + "\n");
-		}
 	}
 
 	/**
@@ -32,7 +20,7 @@ public class Cache extends Connector {
 	public Response getNotification(String notificationId, List<String> fields)
 			throws Exception {
 
-		Map<String, Object> array = new HashMap<String, Object>();
+		Map<String, Object> array = new HashMap<>();
 
 		array.put("notificationId", notificationId);
 		array.put("fields", fields);

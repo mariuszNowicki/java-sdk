@@ -1,4 +1,4 @@
-package isaacloud;
+package com.isaacloud.sdk;
 
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -13,9 +13,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.isaacloud.sdk.IsaacloudConnectionException;
-import com.isaacloud.sdk.ListResponse;
-import com.isaacloud.sdk.Response;
 import net.minidev.json.JSONObject;
 
 import org.apache.http.Header;
