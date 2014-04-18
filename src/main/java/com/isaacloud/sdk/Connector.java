@@ -351,9 +351,9 @@ abstract class Connector {
     /**
      * Prepares the url with parameters.
      *
-     * @param wholeUri uri to be enhanced
+     * @param wholeUri path to be enhanced
      * @param parameters parameters to be added
-     * @return new uri
+     * @return new path
      */
     @SuppressWarnings("rawtypes")
     protected String prepareUrl(String wholeUri, Map<String, Object> parameters) {
@@ -406,7 +406,7 @@ abstract class Connector {
      * Constructs a request and send it.
      *
      * @param methodName  method type as lowercase (get,post,patch,put,delete)
-     * @param uri uri of the resource
+     * @param uri path of the resource
      * @param parameters additional parameters
      * @return response as String
      * @throws IOException

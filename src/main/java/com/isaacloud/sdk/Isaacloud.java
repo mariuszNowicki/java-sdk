@@ -9,15 +9,20 @@ public class Isaacloud extends Connector {
 
     public class Caller {
 
-        public Caller(String _uri) {
-            this.uri = _uri;
+        public Caller(String _path) {
+            this.path = _path;
         }
 
-        private String uri;
-        private Map<String, Object> parameters = new HashMap<>();
+        protected String path;
+        protected Map<String, Object> parameters = new HashMap<>();
 
         public Caller withFields(String... fields) {
             parameters.put("fields", Arrays.asList(fields));
+            return this;
+        }
+
+        public Caller withCustoms(String... customs) {
+            parameters.put("customs", Arrays.asList(customs));
             return this;
         }
 
@@ -42,6 +47,11 @@ public class Isaacloud extends Connector {
             return this;
         }
 
+        public Caller withQuery(Map<String, String> order) {
+            parameters.put("query", order);
+            return this;
+        }
+
         public Caller withCreatedAt(Long from, Long to) {
             if (from != null)
                 parameters.put("fromc", from);
@@ -58,6 +68,11 @@ public class Isaacloud extends Connector {
             return this;
         }
 
+        public Caller withCustom(){
+            parameters.put("custom", true);
+            return this;
+        }
+
         public Caller withQueryParameters(Map<String, Object> params) {
             parameters.putAll(params);
             return this;
@@ -69,7 +84,7 @@ public class Isaacloud extends Connector {
          * @return api json response
          */
         public Response get() throws IOException, IsaacloudConnectionException {
-            return callService(uri, "get", parameters, null);
+            return callService(path, "get", parameters, null);
         }
 
         /**
@@ -78,7 +93,7 @@ public class Isaacloud extends Connector {
          * @return api json response
          */
         public Response put(JSONObject body) throws IOException, IsaacloudConnectionException {
-            return callService(uri, "put", parameters, body);
+            return callService(path, "put", parameters, body);
         }
 
         /**
@@ -87,7 +102,7 @@ public class Isaacloud extends Connector {
          * @return api json response
          */
         public Response post(JSONObject body) throws IOException, IsaacloudConnectionException {
-            return callService(uri, "post", parameters, body);
+            return callService(path, "post", parameters, body);
         }
 
         /**
@@ -96,7 +111,7 @@ public class Isaacloud extends Connector {
          * @return api json response
          */
         public Response delete() throws IOException, IsaacloudConnectionException {
-            return callService(uri, "delete", parameters, null);
+            return callService(path, "delete", parameters, null);
         }
 
         /**
@@ -105,7 +120,7 @@ public class Isaacloud extends Connector {
          * @return api json response
          */
         public Response patch(JSONObject body) throws IOException, IsaacloudConnectionException {
-            return callService(uri, "patch", parameters, body);
+            return callService(path, "patch", parameters, body);
         }
     }
 
