@@ -11,6 +11,8 @@ The library works on **Java version of 1.7** and **sbt 0.13.0.**
 This SDK can be used to connect to Isaacloud v1 REST API on api.com.isaacloud.com.
 The "com.isaacloud" package contains special class Isaacloud, which contains some nice methods for use in communicating with the api.
 
+You can also access the [javadocs](http://isaacloud.github.io/java-sdk/).
+
 ## How to build
 
 1. Clone repository:
