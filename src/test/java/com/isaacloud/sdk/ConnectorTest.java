@@ -210,6 +210,8 @@ public class ConnectorTest {
 		int limit = 10;
 		int total = 13;
 		int offset = 1;
+        int page = 3;
+        int pages = 11;
 
 		connector.client = client;
 		HttpEntity ent = new StringEntity(expected);
@@ -223,7 +225,7 @@ public class ConnectorTest {
 
 		Header[] header = new Header[1];
 		header[0] = new BasicHeader("Collection-Paginator", "{\"limit\":"
-				+ limit + ",\"offset\":" + offset + ",\"total\":" + total + "}");
+				+ limit + ",\"offset\":" + offset + ",\"total\":" + total +",\"page\":" + page + ",\"pages\":" + pages +"}");
 
 		when(response.getHeaders(anyString())).thenReturn(header);
 

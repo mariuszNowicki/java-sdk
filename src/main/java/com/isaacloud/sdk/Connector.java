@@ -8,7 +8,6 @@ import java.net.UnknownHostException;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
-import java.security.cert.CertificateException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -27,7 +26,6 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.NameValuePair;
-import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpDelete;
@@ -49,62 +47,101 @@ import org.apache.http.util.EntityUtils;
 
 import com.google.common.base.Joiner;
 
+/**
+ * Abstract class for connecting to different api with oauth authentication.
+ */
 abstract class Connector {
 
-    // connector configuration
+    /**
+     * Url to api.
+     */
     protected String baseUrl;
+
+    /**
+     * Api version
+     */
     protected String version;
+
+    /**
+     * Url to oauth
+     */
     protected String oauthUrl;
+
+    /**
+     * Client id for the api
+     */
     protected String clientId = null;
+
+    /**
+     * Secret connected with the id.
+     */
     protected String clientSecret = null;
 
-    // current state of the connection
+    /**
+     * Current expiry time for token
+     */
     protected long currentTokenTime = new Date().getTime() - 1;
+
+    /**
+     * Current token
+     */
     protected String currentToken = "";
+
+    /**
+     * Client variable used to execute http requests.
+     */
     protected CloseableHttpClient client = null;
 
+    /**
+     * Getter for client.
+     * @return current client
+     */
     public CloseableHttpClient getHttpClient() {
         return client;
     }
 
-    public void setHttpClient(CloseableHttpClient client) {
-        this.client = client;
-    }
-
+    /**
+     * Get current expiry date.
+     * @return date as long
+     */
     public long getCurrentTokenTime() {
         return currentTokenTime;
     }
 
+    /**
+     * Get current authentication token.
+     * @return token as String
+     */
     public String getCurrentToken() {
         return currentToken;
     }
 
+    /**
+     * Get version of the api.
+     * @return version as String
+     */
     public String getVersion() {
         return version;
     }
 
-    public void setVersion(String version) {
-        this.version = version;
-    }
-
+    /**
+     * Get the base url to the api.
+     * @return url as String
+     */
     public String getBaseUrl() {
         return baseUrl;
     }
 
-    public void setBaseUrl(String baseUrl) {
-        this.baseUrl = baseUrl;
-    }
-
+    /**
+     * Get the oauth url.
+     * @return url as String
+     */
     public String getOauthUrl() {
         return oauthUrl;
     }
 
-    public void setOauthUrl(String oauthUrl) {
-        this.oauthUrl = oauthUrl;
-    }
-
     /**
-     * Basic constructor, creates basic HTTPClient without ssl.
+     * Basic constructor, creates apache HTTPClient.
      *
      * @param baseUrl  base com.isaacloud api url
      * @param oauthUrl com.isaacloud oauth url
@@ -136,10 +173,9 @@ abstract class Connector {
     }
 
     /**
-     * Used to setup the ssl context. Does not throw exceptions in order to.
+     * Used to setup the ssl context. Does not throw exceptions.
      *
      * @throws IOException
-     * @throws CertificateException
      * @throws UnknownHostException
      * @throws NoSuchAlgorithmException
      * @throws KeyManagementException
@@ -167,11 +203,11 @@ abstract class Connector {
     }
 
     /**
-     * Creates a HttpPost object to be sent to oauth
+     * Creates a HttpPost object to be sent to oauth.
      *
-     * @return HTTPPost to Oauth
+     * @return HTTPPost for getting Oauth token.
      */
-    protected HttpPost getAuthenticationPost() {
+    protected HttpPost getAuthenticationPost(){
 
         HttpPost method = new HttpPost(this.oauthUrl + "/token");
 
@@ -191,9 +227,7 @@ abstract class Connector {
         try {
             method.setEntity(new UrlEncodedFormEntity(urlParameters));
         } catch (UnsupportedEncodingException e) {
-            // @TODO listener pattern
-            // although this should never throw any exceptions
-
+            // this will never throw any exceptions, because it has the same parameters each time
         }
 
         return method;
@@ -204,13 +238,13 @@ abstract class Connector {
      *
      * @param response from call execution.
      * @return token as String
-     * @throws IOException                  in case the response had an error
-     * @throws IsaacloudConnectionException
+     * @throws IOException connection problems
+     * @throws IsaacloudConnectionException response had an error code
      */
     protected String consumeResponse(CloseableHttpResponse response)
             throws IOException, IsaacloudConnectionException {
 
-        StringBuffer result = new StringBuffer();
+        StringBuilder result = new StringBuilder();
 
         HttpEntity entity1 = response.getEntity();
 
@@ -246,10 +280,9 @@ abstract class Connector {
     /**
      * Get the token, if it's outdated then retrieve it from the server.
      *
-     * @return token value.
-     * @throws ClientProtocolException
-     * @throws IOException
-     * @throws IsaacloudConnectionException
+     * @return token value
+     * @throws IOException connection problems
+     * @throws IsaacloudConnectionException response had an error code
      */
     protected String getAuthentication() throws IOException,
             IsaacloudConnectionException {
@@ -277,16 +310,15 @@ abstract class Connector {
     /**
      * Make a request and write to the string. *
      *
-     * @param method method with parameters.
+     * @param method method with parameters
      * @return response object as String
-     * @throws IOException
-     * @throws IllegalStateException
-     * @throws BadRequestException
+     * @throws IOException connection problems
+     * @throws IsaacloudConnectionException response had an error code
      */
     protected Response makeRequest(HttpUriRequest method) throws IOException,
             IsaacloudConnectionException {
 
-        StringBuffer result = new StringBuffer();
+        StringBuilder result = new StringBuilder();
 
         CloseableHttpResponse response = client.execute(method);
 
@@ -335,10 +367,12 @@ abstract class Connector {
             JSONObject paginatorObject = (JSONObject) JSONValue
                     .parse(paginator[0].getValue());
             JSONArray obj = (JSONArray) JSONValue.parse(result.toString());
-            return new ListResponse(obj, Integer.parseInt(paginatorObject.get(
-                    "total").toString()), Integer.parseInt(paginatorObject.get(
-                    "limit").toString()), Integer.parseInt(paginatorObject.get(
-                    "offset").toString()));
+            return new ListResponse(obj,
+                    Integer.parseInt(paginatorObject.get("total").toString()),
+                    Integer.parseInt(paginatorObject.get("limit").toString()),
+                    Integer.parseInt(paginatorObject.get("offset").toString()),
+                    Integer.parseInt(paginatorObject.get("page").toString()),
+                    Integer.parseInt(paginatorObject.get("pages").toString()));
         } else {
 
             JSONObject obj = (JSONObject) JSONValue.parse(result.toString());
@@ -355,7 +389,6 @@ abstract class Connector {
      * @param parameters parameters to be added
      * @return new path
      */
-    @SuppressWarnings("rawtypes")
     protected String prepareUrl(String wholeUri, Map<String, Object> parameters) {
         String regex = "\\{[a-zA-Z0-9,]+\\}";
 
@@ -409,10 +442,8 @@ abstract class Connector {
      * @param uri path of the resource
      * @param parameters additional parameters
      * @return response as String
-     * @throws IOException
-     * @throws BadRequestException
-     * @throws IllegalStateException
-     * @throws ClientProtocolException
+     * @throws IOException connection problem
+     * @throws IsaacloudConnectionException response had an error code
      */
     public Response callService(String uri, String methodName,
                                 Map<String, Object> parameters, JSONObject body)
@@ -422,19 +453,26 @@ abstract class Connector {
 
         HttpUriRequest method;
 
-        if ("get".equals(methodName)) {
-            method = new HttpGet(wholeUri);
-        } else if ("delete".equals(methodName)) {
-            method = new HttpDelete(wholeUri);
-        } else if ("put".equals(methodName)) {
-            method = new HttpPut(wholeUri);
-        } else if ("post".equals(methodName)) {
-            method = new HttpPost(wholeUri);
-        } else if ("patch".equals(methodName)) {
-            method = new HttpPatch(wholeUri);
-        } else
-            throw new UnsupportedOperationException(methodName
-                    + " is not supported.");
+        switch (methodName) {
+            case "get":
+                method = new HttpGet(wholeUri);
+                break;
+            case "delete":
+                method = new HttpDelete(wholeUri);
+                break;
+            case "put":
+                method = new HttpPut(wholeUri);
+                break;
+            case "post":
+                method = new HttpPost(wholeUri);
+                break;
+            case "patch":
+                method = new HttpPatch(wholeUri);
+                break;
+            default:
+                throw new UnsupportedOperationException(methodName
+                        + " is not supported.");
+        }
 
         method.addHeader("Authorization", this.getAuthentication());
 

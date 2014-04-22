@@ -5,53 +5,112 @@ import java.util.*;
 
 import net.minidev.json.JSONObject;
 
+/**
+ * Class with convenience methods for connecting with the api.
+ */
 public class Isaacloud extends Connector {
 
+    /**
+     * Class for building the request.
+     */
     public class Caller {
 
+        /**
+         * Path to resource.
+         */
+        protected String path;
+
+        /**
+         * Parameters.
+         */
+        protected Map<String, Object> parameters = new HashMap<>();
+
+        /**
+         * Simple contructor.
+         * @param _path path to resource.
+         */
         public Caller(String _path) {
             this.path = _path;
         }
 
-        protected String path;
-        protected Map<String, Object> parameters = new HashMap<>();
-
+        /**
+         * narrows the result set to contain only json fields, which are in the list of the method
+         * @param fields list of field names
+         * @return updated Caller object
+         */
         public Caller withFields(String... fields) {
             parameters.put("fields", Arrays.asList(fields));
             return this;
         }
 
+        /**
+         * Declares exactly which fields in custom fields should be shown.
+         * @param customs list of field names
+         * @return updated Caller object
+         */
         public Caller withCustoms(String... customs) {
             parameters.put("customs", Arrays.asList(customs));
             return this;
         }
 
+        /**
+         * Returns only the the resources with groups' ids in the list.
+         * @param groups list of groups' ids
+         * @return updated Caller object
+         */
         public Caller withGroups(Long... groups) {
             parameters.put("groups", Arrays.asList(groups));
             return this;
         }
 
+        /**
+         * Returns only the the resources with groups' ids in the list.
+         * @param segments list of segments' ids
+         * @return updated Caller object
+         */
         public Caller withSegments(Long... segments) {
             parameters.put("segments", Arrays.asList(segments));
             return this;
         }
 
+        /**
+         * Limits the number and defines the offset for the results, works only with list resources.
+         * @param limit limit of returned results
+         * @param offset starting point for the returned results
+         * @return updated Caller object
+         */
         public Caller withPaginator(Long limit, Long offset) {
             parameters.put("limit", limit);
             parameters.put("offset", offset);
             return this;
         }
 
+        /**
+         * Declares the order in which results in list resources should be returned
+         * @param order list of tuples in form of (fieldName, ASC or DESC)
+         * @return updated Caller object
+         */
         public Caller withOrder(Map<String, String> order) {
             parameters.put("order", order);
             return this;
         }
 
-        public Caller withQuery(Map<String, String> order) {
-            parameters.put("query", order);
+        /**
+         * Performs a search with concrete field values.
+         * @param query list of tuples in form of (fieldName,fieldValue)
+         * @return updated Caller object
+         */
+        public Caller withQuery(Map<String, String> query) {
+            parameters.put("query", query);
             return this;
         }
 
+        /**
+         * Returns only the resources created between certain dates given as milliseconds. In case one of the parameters is None, the limit is not set.
+         * @param from starting date as millis
+         * @param to end date as millis
+         * @return updated Caller object
+         */
         public Caller withCreatedAt(Long from, Long to) {
             if (from != null)
                 parameters.put("fromc", from);
@@ -60,6 +119,12 @@ public class Isaacloud extends Connector {
             return this;
         }
 
+        /**
+         * Returns only the resources last updated between certain dates given as milliseconds. In case one of the parameters is None, the limit is not set.
+         * @param from starting date as millis
+         * @param to end date as millis
+         * @return updated Caller object
+         */
         public Caller withUpdatedAt(Long from, Long to) {
             if (from != null)
                 parameters.put("fromu", from);
@@ -68,11 +133,20 @@ public class Isaacloud extends Connector {
             return this;
         }
 
+        /**
+         * Declares whether custom fields should be returned
+         * @return updated Caller object
+         */
         public Caller withCustom(){
             parameters.put("custom", true);
             return this;
         }
 
+        /**
+         * Add custom query parameters to request.
+         * @param params map with queries
+         * @return updated Caller object
+         */
         public Caller withQueryParameters(Map<String, Object> params) {
             parameters.putAll(params);
             return this;
@@ -137,13 +211,13 @@ public class Isaacloud extends Connector {
     /**
      * Call to api methods.
      *
-     * @param uri
-     * @param method
-     * @param parameters
-     * @param body
+     * @param uri path to resource
+     * @param method REST method type
+     * @param parameters query parameters
+     * @param body body json object
      * @return api json response
-     * @throws IOException
-     * @throws IsaacloudConnectionException
+     * @throws IOException connection problem
+     * @throws IsaacloudConnectionException response had an error code
      */
     @Deprecated
     public Response api(String uri, String method,
@@ -163,16 +237,15 @@ public class Isaacloud extends Connector {
     /**
      * Push new event into Queue.
      *
-     * @param subjectId
-     * @param subjectType
-     * @param priority
-     * @param sourceId
-     * @param type
-     * @param body
-     * @return
-     * @throws IOException
-     * @throws BadRequestException
-     * @throws IllegalStateException
+     * @param subjectId subject Id, id of resource
+     * @param subjectType  GROUP or USER
+     * @param priority PRIORITY_LOW, PRIORITY_MEDIUM, PRIORITY_NORMAL, PRIORITY_HIGH, PRIORITY_CRITICAL, PRIORITY_BLOCKER
+     * @param sourceId transaction source id
+     * @param type NORMAL, GROUP, DEBUG, FORCED
+     * @param body event body
+     * @return response with the created event.
+     * @throws IOException connection problem
+     * @throws IsaacloudConnectionException response had an error code
      */
     public Response event(long subjectId, String subjectType, String priority,
                           long sourceId, String type, JSONObject body) throws IOException,
@@ -201,7 +274,7 @@ public class Isaacloud extends Connector {
     }
 
     /**
-     * Get base api url
+     * Get base api url.
      *
      * @return url to api
      */
@@ -210,7 +283,7 @@ public class Isaacloud extends Connector {
     }
 
     /**
-     * Get base oauth url
+     * Get base oauth url.
      *
      * @return oauth url
      */
@@ -219,7 +292,7 @@ public class Isaacloud extends Connector {
     }
 
     /**
-     * Get base version
+     * Get base version.
      *
      * @return api version
      */
@@ -228,11 +301,11 @@ public class Isaacloud extends Connector {
     }
 
     /**
-     * Get token
+     * Get token.
      *
-     * @return type
-     * @throws IOException
-     * @throws IsaacloudConnectionException
+     * @return token as string
+     * @throws IOException connection error
+     * @throws IsaacloudConnectionException response had an error code
      */
     public String getToken() throws IOException, IsaacloudConnectionException {
         return getAuthentication();
