@@ -76,6 +76,10 @@ You can use the Isaacloud api class. To make a simple request we first need to s
 Example calls:
 
 ```java
+Map<String, String> config = new HashMap<>();
+config.put("clientId",":your_client_id:")
+config.put("secret",":your_client_secret:")
+
 Map<String, String> order = new HashMap<>();
 order.put("email", "ASC");
 
