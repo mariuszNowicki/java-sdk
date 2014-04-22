@@ -210,6 +210,18 @@ public class ConnectorApiTest {
     }
 
     @Test
+    public void testIds(){
+
+        String expected = "/cache/users?ids=1,2,3";
+
+        Isaacloud.Caller called = isaac.path("/cache/users").withIds(1l,2l,3l);
+
+        String res = isaac.prepareUrl(called.path,called.parameters);
+
+        assertEquals(res,expected);
+    }
+
+    @Test
     public void testPaginator(){
 
         Long limit = 10l;

@@ -123,6 +123,12 @@ In methods without a certain trait it will be ignored. Here we give a list of th
     Response response = isaac.path("/cache/users").withSegments(1l,2l,3l);  //returns only the users in segments 1 or 2 or 3
     ```
 
+* withIds - returns only the the resources with ids in the list
+
+    ```java
+    Response response = isaac.path("/cache/users").withIds(1l,2l,3l);  //returns only the users in segments 1 or 2 or 3
+    ```
+
 * withOrder - declares the order in which results in list resources should be returned
 
     ```java
