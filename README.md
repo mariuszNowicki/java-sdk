@@ -72,7 +72,7 @@ object Build extends Build {
 }
 ```
 
-## Making request calls
+## Overview
 
 You can use the Isaacloud api class. To make a simple request we first need to specify the path to a resource using the *path* method, then declare the query parameters and lastly use a concrete REST method for acquiring the results.
 Example calls:
@@ -198,3 +198,103 @@ If no detailed exception handling is required, you can simply catch the basic Is
 
 For detailed information about the possible uri calls, available query parameters and request methods please see our documentation:
 https://com.isaacloud.com/documentation
+
+
+## Additional examples
+
+### Send events
+
+There is an additional method in Isaacloud class used for creating events:
+
+```scala
+
+    JSONObject body = new JSONObject();
+    body.put("destination","JFK");
+    body.put("distance","2000");
+
+    Map<String, String> config = new HashMap<>();
+    config.put("clientId",":your_client_id:");
+    config.put("secret",":your_client_secret:");
+    Isaacloud isaac = new Isaacloud(config);
+    isaac.event(1,"USER",1,"NORMAL","PRIORITY_NORMAL",body);
+```
+
+The method takes the subject id(id of the group or user it concerns), subject type(USER or GROUP). event type, priority of the event and body for the event.
+Most of this information you can find in scaladocs.
+
+### Get one user from cache
+
+To get one user you have to use the get method:
+
+```scala
+    Map<String, String> config = new HashMap<>();
+    config.put("clientId",":your_client_id:");
+    config.put("secret",":your_client_secret:");
+    Isaacloud isaac = new Isaacloud(config);
+    Long id = 1;
+    JSONObject user = (JSONObject)isaac.path("cache/users/"+id).get().getJson();
+```
+
+### Get list of users from cache
+
+To get a list of users you have to use the get method:
+
+```scala
+    Map<String, String> config = new HashMap<>();
+    config.put("clientId",":your_client_id:");
+    config.put("secret",":your_client_secret:");
+    Isaacloud isaac = new Isaacloud(config);
+
+    JSONArray users = (JSONArray)isaac.path("cache/users").get().getJson();
+```
+
+### Create one user
+
+To get one user you have to use the post method:
+
+```scala
+    JSONObject user = new JSONObject();
+    user.put("birthDate", "1979-10-22");
+    user.put("email","dbrown@example.com");
+    user.put("password","M0nKey_busine$s");
+    user.put("firstName","Dan");
+    user.put("lastName","Brown");
+
+    Map<String, String> config = new HashMap<>();
+    config.put("clientId",":your_client_id:");
+    config.put("secret",":your_client_secret:");
+    Isaacloud isaac = new Isaacloud(config);
+
+    JSONObject user = (JSONObject)isaac.path("admin/users").post(user);
+```
+
+### Update one user
+
+To update one user you have to use the put method:
+
+```scala
+    JSONObject user = new JSONObject();
+    user.put("firstName","Bob");
+    user.put("lastName","Blue");
+
+    Map<String, String> config = new HashMap<>();
+    config.put("clientId",":your_client_id:");
+    config.put("secret",":your_client_secret:");
+    Isaacloud isaac = new Isaacloud(config);
+
+    Long id = 1
+    JSONObject user = (JSONObject)isaac.path("admin/users/"+id).put(user);
+```
+
+### Delete one user
+
+To update one user you have to use the put method:
+
+```scala
+     Map<String, String> config = new HashMap<>();
+     config.put("clientId",":your_client_id:");
+     config.put("secret",":your_client_secret:");
+     Isaacloud isaac = new Isaacloud(config);
+
+    isaac.path("admin/users/" + id).delete();
+```
