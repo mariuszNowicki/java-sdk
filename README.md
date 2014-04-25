@@ -1,33 +1,33 @@
 # IsaaCloud SDK for Java
 
-The IsaaCloud Java SDK can be used to access the IsaaCloud API through java. The user can make any number of request calls to the API.
+The IsaaCloud Java SDK can be used to access the IsaaCloud API through Java. The user can make any number of request calls to the API.
 
 ## Requirements
 
-The library works on **Java version of 1.7** and **sbt 0.13.0.**
+The library works on **Java version 1.7** and **sbt 0.13.0.**
 
 ## Basics
 
-This SDK can be used to connect to Isaacloud v1 REST API on api.com.isaacloud.com.
+This SDK can be used to connect to the Isaacloud v1 REST API on api.com.isaacloud.com.
 The "com.isaacloud" package contains special class Isaacloud, which contains some nice methods for use in communicating with the api.
 
-You can also access scaladocs [here](http://isaacloud.github.io/scala-sdk)
+You can also access javadocs [here](http://isaacloud.github.io/java-sdk)
 
-## How to build
+## How to build it
 
-1. Clone repository:
+1. Clone the repository:
 
     ```
     git clone https://github.com/com.isaacloud/java-sdk.git
     ```
 
-2. Enter directory:
+2. Enter the directory:
 
     ```
     cd java-sdk
     ```
 
-3. Run installation of dependencies:
+3. Run the installation of dependencies:
 
     ```
     sbt compile
@@ -39,7 +39,7 @@ You can also access scaladocs [here](http://isaacloud.github.io/scala-sdk)
     sbt publish
     ```
 
-    or you can add as a dependency with build.java. For example:
+    or you can add it as a dependency with build.java. For example:
 
 ```java
 object Build extends Build {
@@ -74,7 +74,7 @@ object Build extends Build {
 
 ## Overview
 
-You can use the Isaacloud api class. To make a simple request we first need to specify the path to a resource using the *path* method, then declare the query parameters and lastly use a concrete REST method for acquiring the results.
+You can use the Isaacloud API class. To make a simple request, we first need to specify the path to a resource using the *path* method, then declare the query parameters and lastly use a specific REST method for acquiring the results.
 Example calls:
 
 ```java
@@ -95,14 +95,14 @@ try {
 }
 ```
 
-The methods that start with word *with* are responsible for narrowing the result set. Each one changes the way the result will be returned by the method. You can combine multiple in order to have a desired effect.
-In methods without a certain trait it will be ignored. Here we give a list of those methods:
+The methods that start with word *with* are responsible for narrowing the result set. Each one changes the way the result will be returned by the method. You can combine multiple in order to get the desired effect.
+In the methods without a certain trait it will be ignored. The list of the methods is presented below:
 
 
 * withFields - narrows the result set to contain only json fields, which are in the list of the method
 
     ```java
-    Response response = isaac.path("/cache/users").withFields("firstName","lastName");  //returns only the first and last names of a user
+    Response response = isaac.path("/cache/users").withFields("firstName","lastName");  //returns only the first and last name of a user
     ```
 
 * withPaginator - limits the number and defines the offset for the results, works only with list resources
@@ -111,13 +111,13 @@ In methods without a certain trait it will be ignored. Here we give a list of th
     Response response = isaac.path("/cache/users").withPaginator(10l,5l);  //returns 5 elements starting with the tenth
     ```
 
-* withGroups - returns only the the resources with groups' ids in the list
+* withGroups - returns only the resources containing groups' ids in the list
 
     ```java
     Response response = isaac.path("/cache/users").withGroups(1l,2l,3l);  //returns only the users in segments 1 or 2 or 3
     ```
 
-* withSegments - returns only the the resources with segments' ids in the list
+* withSegments - returns only the resources containing segments' ids in the list
 
     ```java
     Response response = isaac.path("/cache/users").withSegments(1l,2l,3l);  //returns only the users in segments 1 or 2 or 3
@@ -129,7 +129,7 @@ In methods without a certain trait it will be ignored. Here we give a list of th
     Response response = isaac.path("/cache/users").withIds(1l,2l,3l);  //returns only the users in segments 1 or 2 or 3
     ```
 
-* withOrder - declares the order in which results in list resources should be returned
+* withOrder - declares the order in which the results in list resources should be returned
 
     ```java
     Map<String,String> order = new HashMap<>();
@@ -159,10 +159,10 @@ In methods without a certain trait it will be ignored. Here we give a list of th
 * withCustoms - declares exactly which fields in custom fields should be shown.
 
     ```java
-    Response response = isaac.path("/admin/users").withCustoms("shoeSize","weight");  //returns only custom fields with keys shoeSize and weight
+    Response response = isaac.path("/admin/users").withCustoms("shoeSize","weight");  //returns only custom fields with the shoeSize and weight keys
     ```
 
-* withQuery - performs a search with concrete field values.
+* withQuery - performs a search with specific field values.
     ```java
     Map<String,Object> query = new HashMap<>();
     query.put("wonGames.amount", 12);
@@ -170,14 +170,14 @@ In methods without a certain trait it will be ignored. Here we give a list of th
     Response response = isaac.path("/admin/users").withQuery(query);  //returns only users with game 1 won 12 times
      ```
 
-* withQueryParameters - add query parameters manually.
+* withQueryParameters - adds query parameters manually.
     ```java
     Map<String,Object> params = new HashMap<>();
     List<String> fields= new LinkedList<>();
     fields.add("firstName");
     fields.add("lastName");
     params.put("fields",fields);
-    Response response = isaac.path("/cache/users").withQueryParameters(params);  //returns only the first and last names of a user
+    Response response = isaac.path("/cache/users").withQueryParameters(params);  //returns only the first and last name of a user
      ```
 
 There are multiple ways to access the result of the request. Depending on the expected form of the result (single JSON object or a JSON array), the user can use:
@@ -194,11 +194,7 @@ JSONArray array = (JSONArray) response.getJson()
 
 You can check whether it is an array or object using *isObject()* or *isArray()*
 
-If no detailed exception handling is required, you can simply catch the basic IsaacloudConnectionException, as shown in the sample call above. If more detailed information about the error is needed, there are several exception classes that extend the general IsaacloudConnectionException. Catch the detailed exception before the general one. Check com.isaacloud package for more details on available exceptions. Each of these exceptions can return an internal error code and message through the getInternalCode() and getMessage() methods. Reviewing these values will give you further insight on what went wrong.
-
-For detailed information about the possible uri calls, available query parameters and request methods please see our documentation:
-https://com.isaacloud.com/documentation
-
+If no detailed exception handling is required, you can simply catch the basic IsaacloudConnectionException, as shown in the sample call above. If more detailed information about the error is needed, there are several exception classes that extend the general IsaacloudConnectionException. Catch the detailed exception before the general one. Check com.isaacloud package for more details on available exceptions. Each of these exceptions can return an internal error code and message via the getInternalCode() and getMessage() methods. Reviewing these values will give you further insight on what went wrong.
 
 ## Additional examples
 
@@ -206,7 +202,7 @@ https://com.isaacloud.com/documentation
 
 There is an additional method in Isaacloud class used for creating events:
 
-```scala
+```java
 
     JSONObject body = new JSONObject();
     body.put("destination","JFK");
@@ -226,7 +222,7 @@ Most of this information you can find in scaladocs.
 
 To get one user you have to use the get method:
 
-```scala
+```java
     Map<String, String> config = new HashMap<>();
     config.put("clientId",":your_client_id:");
     config.put("secret",":your_client_secret:");
@@ -239,7 +235,7 @@ To get one user you have to use the get method:
 
 To get a list of users you have to use the get method:
 
-```scala
+```java
     Map<String, String> config = new HashMap<>();
     config.put("clientId",":your_client_id:");
     config.put("secret",":your_client_secret:");
@@ -252,7 +248,7 @@ To get a list of users you have to use the get method:
 
 To get one user you have to use the post method:
 
-```scala
+```java
     JSONObject user = new JSONObject();
     user.put("birthDate", "1979-10-22");
     user.put("email","dbrown@example.com");
@@ -272,7 +268,7 @@ To get one user you have to use the post method:
 
 To update one user you have to use the put method:
 
-```scala
+```java
     JSONObject user = new JSONObject();
     user.put("firstName","Bob");
     user.put("lastName","Blue");
@@ -282,7 +278,7 @@ To update one user you have to use the put method:
     config.put("secret",":your_client_secret:");
     Isaacloud isaac = new Isaacloud(config);
 
-    Long id = 1
+    Long id = 1;
     JSONObject user = (JSONObject)isaac.path("admin/users/"+id).put(user);
 ```
 
@@ -290,7 +286,7 @@ To update one user you have to use the put method:
 
 To update one user you have to use the put method:
 
-```scala
+```java
      Map<String, String> config = new HashMap<>();
      config.put("clientId",":your_client_id:");
      config.put("secret",":your_client_secret:");
@@ -298,3 +294,6 @@ To update one user you have to use the put method:
 
     isaac.path("admin/users/" + id).delete();
 ```
+
+For detailed information about the possible URI calls, available query parameters and request methods please see our documentation:
+https://com.isaacloud.com/documentation
