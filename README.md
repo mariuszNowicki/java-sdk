@@ -287,13 +287,13 @@ To update one user you have to use the put method:
 To update one user you have to use the put method:
 
 ```java
-     Map<String, String> config = new HashMap<>();
-     config.put("clientId",":your_client_id:");
-     config.put("secret",":your_client_secret:");
-     Isaacloud isaac = new Isaacloud(config);
+    Map<String, String> config = new HashMap<>();
+    config.put("clientId",":your_client_id:");
+    config.put("secret",":your_client_secret:");
+    Isaacloud isaac = new Isaacloud(config);
 
     isaac.path("admin/users/" + id).delete();
 ```
 
 For detailed information about the possible URI calls, available query parameters and request methods please see our documentation:
-https://com.isaacloud.com/documentation
+https://isaacloud.com/documentation
