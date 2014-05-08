@@ -213,7 +213,7 @@ There is an additional method in Isaacloud class used for creating events:
     config.put("clientId",":your_client_id:");
     config.put("secret",":your_client_secret:");
     Isaacloud isaac = new Isaacloud(config);
-    isaac.event(1,"USER",1,"NORMAL","PRIORITY_NORMAL",body);
+    isaac.event(1,"USER","PRIORITY_NORMAL", 1,"NORMAL",body);
 ```
 
 The method takes the subject id(id of the group or user it concerns), subject type(USER or GROUP). event type, priority of the event and body for the event.
