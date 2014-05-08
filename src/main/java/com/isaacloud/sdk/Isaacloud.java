@@ -64,6 +64,16 @@ public class Isaacloud extends Connector {
         }
 
         /**
+         * Returns only the the resources with ids' ids in the list.
+         * @param ids list of ids
+         * @return updated Caller object
+         */
+        public Caller withIds(Long... ids) {
+            parameters.put("ids", Arrays.asList(ids));
+            return this;
+        }
+
+        /**
          * Returns only the the resources with groups' ids in the list.
          * @param segments list of segments' ids
          * @return updated Caller object
