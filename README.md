@@ -77,7 +77,7 @@ object Build extends Build {
 ## Overview
 
 To make request calls, you can use the Isaacloud API class. To make a simple request, we first need to specify the path to a resource using the *path* method, then declare the query parameters and lastly use a specific REST method for acquiring the results.
-Example calls:
+Examples of calls:
 
 ```java
 Map<String, String> config = new HashMap<>();
@@ -278,7 +278,7 @@ To create a user, use the post method:
     JSONObject user = (JSONObject)isaac.path("admin/users").post(user);
 ```
 
-### Update one user
+### Update a user
 
 To update a user, use the put method:
 
@@ -296,7 +296,7 @@ To update a user, use the put method:
     JSONObject user = (JSONObject)isaac.path("admin/users/"+id).put(user);
 ```
 
-### Delete one user
+### Delete a user
 
 To delete a user, use the delete method:
 
