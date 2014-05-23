@@ -9,7 +9,7 @@ The library works on **Java version 1.7** and **sbt 0.13.0.**
 ## Basics
 
 This SDK can be used to connect to the Isaacloud v1 REST API on api.com.isaacloud.com.
-The "com.isaacloud" package contains special class Isaacloud, which contains some nice methods for use in communicating with the api.
+The "com.isaacloud" package contains a special class Isaacloud, which contains some nice methods for use in communicating with the API.
 
 You can also access the [javadocs](http://isaacloud.github.io/java-sdk/).
 
@@ -76,8 +76,8 @@ object Build extends Build {
 
 ## Overview
 
-You can use the Isaacloud API class. To make a simple request, we first need to specify the path to a resource using the *path* method, then declare the query parameters and lastly use a specific REST method for acquiring the results.
-Example calls:
+To make request calls, you can use the Isaacloud API class. To make a simple request, we first need to specify the path to a resource using the *path* method, then declare the query parameters and lastly use a specific REST method for acquiring the results.
+Examples of calls:
 
 ```java
 Map<String, String> config = new HashMap<>();
@@ -97,15 +97,15 @@ try {
 }
 ```
 
-The methods that start with word *with* are responsible for narrowing the result set. Each one changes the way the result will be returned by the method. You can combine multiple in order to get the desired effect.
-In the methods without a certain trait it will be ignored. The list of the methods is presented below:
+The methods that start with the word *with* are responsible for narrowing the result set. Each one changes the way the result will be returned by the method. You can combine multiple methods in order to get the desired effect.
+In methods without a certain trait it will be ignored. The list of the methods is presented below:
 
 
-* withFields - narrows the result set to contain only json fields, which are in the list of the method
+* withFields - narrows the result set to contain only json fields which are in the list of the method
 
     ```java
     Response response = isaac.path("/cache/users").withFields("firstName","lastName");  
-    //returns only the first and last names of a user
+    //returns the users' first and last name only
     ```
 
 * withPaginator - limits the number and defines the offset for the results, works only with list resources
@@ -146,14 +146,14 @@ In the methods without a certain trait it will be ignored. The list of the metho
     //returns results sorted first by firstName ascending and then by lastName descending
     ```
 
-* withCreatedAt - returns only the resources created between certain dates given as milliseconds. In case one of the parameters is None, the limit is not set.
+* withCreatedAt - returns only the resources created between certain dates given in milliseconds. If one of the parameters is None, the limit is not set.
 
     ```java
     Response response = isaac.path("/cache/users").withCreatedAt(1398157190540l,null);  
     //returns only the users created after Tue Apr 22 2014 8:59:50 AM
     ```
 
-* withUpdatedAt - returns only the resources last updated between certain dates given as milliseconds. In case one of the parameters is None, the limit is not set.
+* withUpdatedAt - returns only the resources last updated between certain dates given in milliseconds. If one of the parameters is None, the limit is not set.
 
     ```java
     Response response = isaac.path("/cache/users").withUpdatedAt(null, 1398157190540l);  
@@ -191,7 +191,7 @@ In the methods without a certain trait it will be ignored. The list of the metho
     fields.add("lastName");
     params.put("fields",fields);
     Response response = isaac.path("/cache/users").withQueryParameters(params);  
-    //returns only the first and last names of a user
+    //returns the users' first and last name only
      ```
 
 There are multiple ways to access the result of the request. Depending on the expected form of the result (single JSON object or a JSON array), the user can use:
@@ -214,7 +214,7 @@ If no detailed exception handling is required, you can simply catch the basic Is
 
 ### Send events
 
-There is an additional method in Isaacloud class used for creating events:
+There is an additional method in the Isaacloud class used for creating events:
 
 ```java
 
@@ -229,12 +229,12 @@ There is an additional method in Isaacloud class used for creating events:
     isaac.event(1,"USER","PRIORITY_NORMAL", 1,"NORMAL",body);
 ```
 
-The method takes the subject id(id of the group or user it concerns), subject type(USER or GROUP). event type, priority of the event and body for the event.
-Most of this information you can find in scaladocs.
+The method takes the subject id (the id of the group or user it relates to), the subject type (USER or GROUP), the event type, the priority of the event and the body for the event.
+Most of this information can be found in scaladocs.
 
 ### Get one user from cache
 
-To get one user you have to use the get method:
+To get one user, use the get method:
 
 ```java
     Map<String, String> config = new HashMap<>();
@@ -245,9 +245,9 @@ To get one user you have to use the get method:
     JSONObject user = (JSONObject)isaac.path("cache/users/"+id).get().getJson();
 ```
 
-### Get list of users from cache
+### Get the list of users from cache
 
-To get a list of users you have to use the get method:
+To get the list of users, use the get method:
 
 ```java
     Map<String, String> config = new HashMap<>();
@@ -258,9 +258,9 @@ To get a list of users you have to use the get method:
     JSONArray users = (JSONArray)isaac.path("cache/users").get().getJson();
 ```
 
-### Create one user
+### Create a user
 
-To get one user you have to use the post method:
+To create a user, use the post method:
 
 ```java
     JSONObject user = new JSONObject();
@@ -278,9 +278,9 @@ To get one user you have to use the post method:
     JSONObject user = (JSONObject)isaac.path("admin/users").post(user);
 ```
 
-### Update one user
+### Update a user
 
-To update one user you have to use the put method:
+To update a user, use the put method:
 
 ```java
     JSONObject user = new JSONObject();
@@ -296,9 +296,9 @@ To update one user you have to use the put method:
     JSONObject user = (JSONObject)isaac.path("admin/users/"+id).put(user);
 ```
 
-### Delete one user
+### Delete a user
 
-To update one user you have to use the put method:
+To delete a user, use the delete method:
 
 ```java
     Map<String, String> config = new HashMap<>();
@@ -309,5 +309,5 @@ To update one user you have to use the put method:
     isaac.path("admin/users/" + id).delete();
 ```
 
-For detailed information about the possible uri calls, available query parameters and request methods please see our documentation:
+For detailed information about the possible URI calls, available query parameters and request methods please see our documentation:
 https://com.isaacloud.com/documentation
