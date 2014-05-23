@@ -4,7 +4,7 @@ The IsaaCloud Java SDK can be used to access the IsaaCloud API through Java. The
 
 ## Requirements
 
-The library works on **Java version 1.7** and **sbt 0.13.0.**
+The library compiles on **Java version 1.7** and **sbt 0.13.x.**
 
 ## Basics
 
@@ -43,36 +43,21 @@ You can also access the [javadocs](http://isaacloud.github.io/java-sdk/).
 
     or you can add it as a dependency with build.java. For example:
 
-```java
-object Build extends Build {
-    lazy val sdk = RootProject(uri("https://github.com/com.isaacloud/java-sdk.git#%s".format("0.0.2-RC2")))
-    lazy val defaultSettings =
-        Defaults.defaultSettings ++
-            Seq(
-                name := "play_example",
-                version := "1.0",
-                javaVersion := "2.10.1",
-                javacOptions := Seq(
-                    "-feature",
-                    "-language:implicitConversions",
-                    "-language:postfixOps",
-                    "-unchecked",
-                    "-deprecation",
-                    "-encoding", "utf8",
-                    "-Ywarn-adapted-args"))
+    ```scala
+    lazy val sdk = RootProject(uri("https://github.com/isaacloud/java-sdk.git#%s".format("0.1.1")))
 
-    lazy val root = Project("root",
-        file("."),
-        settings = defaultSettings ++ Seq(
-        resolvers ++= Seq(
-            "Typesafe Repo" at "http://repo.typesafe.com/typesafe/releases/",
-            "Maven repository" at "http://morphia.googlecode.com/svn/mavenrepo/"),
-        libraryDependencies ++= Seq(
-            "net.minidev" % "json-smart" % "1.1.1"
-        )))
-        .dependsOn(sdk)
-}
-```
+    lazy val main = project.in(file(".")).dependsOn(sdk).aggregate(sdk)
+
+    name := "simple-app"
+
+    version := "0.0.1"
+
+    libraryDependencies ++= Seq(
+    "com.typesafe" % "config" % "1.0.2",
+    "org.apache.httpcomponents" % "httpclient" % "4.3.1",
+    "net.minidev" % "json-smart" % "1.2"
+    )
+    ```
 
 ## Overview
 
