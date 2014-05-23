@@ -97,7 +97,7 @@ try {
 }
 ```
 
-The methods that start with the word *with* are responsible for narrowing the result set. Each one changes the way the result will be returned by the method. You can combine multiple methods in order to get the desired effect.
+The methods that start with the word with are responsible for narrowing the result set. Each one changes the way the result will be returned by the method. You can combine multiple methods in order to get the desired effect.
 In methods without a certain trait it will be ignored. The list of the methods is presented below:
 
 
