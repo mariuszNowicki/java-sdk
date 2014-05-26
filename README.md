@@ -124,7 +124,7 @@ In methods without a certain trait it will be ignored. The list of the methods i
 * withOrder - declares the order in which the results in list resources should be returned
 
     ```java
-    Map<String,String> order = new HashMap<>();
+    SortedMap<String,String> order = new TreeMap<>();
     order.put("firstName","ASC");
     order.put("lastName","DESC");
     Response response = isaac.path("/cache/users").withOrder(order);  
@@ -161,7 +161,7 @@ In methods without a certain trait it will be ignored. The list of the methods i
 
 * withQuery - performs a search with specific field values.
     ```java
-    Map<String,Object> query = new HashMap<>();
+    SortedMap<String,Object> query = new TreeMap<>();
     query.put("wonGames.amount", 12);
     query.put("wonGames.game", 1);
     Response response = isaac.path("/admin/users").withQuery(query);  

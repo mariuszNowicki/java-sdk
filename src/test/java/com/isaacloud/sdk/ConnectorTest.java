@@ -152,11 +152,11 @@ public class ConnectorTest {
 		when(response.getStatusLine()).thenReturn(
 				new BasicStatusLine(new ProtocolVersion("", 1, 2), 200, "any"));
 
-		String res = connector.getAuthentication();
+		String res = connector.getAuthentication(false);
 
 		assert (res.equals("Bearer " + token));
 
-		res = connector.getAuthentication();
+		res = connector.getAuthentication(false);
 
 		assert (res.equals("Bearer " + token));
 		verify(response, times(1)).getEntity();
@@ -197,7 +197,7 @@ public class ConnectorTest {
 				new BasicStatusLine(new ProtocolVersion("", 1, 2), 200, "any"));
 		when(response.getHeaders(anyString())).thenReturn(new Header[0]);
 
-		Response res = connector.makeRequest(method);
+		Response res = connector.makeRequest(method,0);
 
 		assert (res.getJson().toString().equals(expected));
 
@@ -229,7 +229,7 @@ public class ConnectorTest {
 
 		when(response.getHeaders(anyString())).thenReturn(header);
 
-		Response res = connector.makeRequest(method);
+		Response res = connector.makeRequest(method,0);
 
 		assert (res.getJson().toString().equals(expected));
 		assert (res.getClass() == ListResponse.class);
@@ -252,7 +252,7 @@ public class ConnectorTest {
 				new BasicStatusLine(new ProtocolVersion("", 1, 2), 404, "any"));
 
 		exception.expect(NotFoundException.class);
-		connector.makeRequest(method);
+		connector.makeRequest(method,0);
 
 	}
 	
@@ -270,7 +270,7 @@ public class ConnectorTest {
 				new BasicStatusLine(new ProtocolVersion("", 1, 2), 500, "any"));
 
 		exception.expect(InternalServerException.class);
-		connector.makeRequest(method);
+		connector.makeRequest(method,0);
 
 	}
 	
@@ -288,7 +288,7 @@ public class ConnectorTest {
 				new BasicStatusLine(new ProtocolVersion("", 1, 2), 400, "any"));
 
 		exception.expect(BadRequestException.class);
-		connector.makeRequest(method);
+		connector.makeRequest(method,0);
 
 	}
 	
@@ -306,7 +306,7 @@ public class ConnectorTest {
 				new BasicStatusLine(new ProtocolVersion("", 1, 2), 401, "any"));
 
 		exception.expect(UnauthorizedException.class);
-		connector.makeRequest(method);
+		connector.makeRequest(method,0);
 
 	}
 	
@@ -324,7 +324,7 @@ public class ConnectorTest {
 				new BasicStatusLine(new ProtocolVersion("", 1, 2), 402, "any"));
 
 		exception.expect(PaymentRequiredException.class);
-		connector.makeRequest(method);
+		connector.makeRequest(method,0);
 
 	}
 	
@@ -342,7 +342,7 @@ public class ConnectorTest {
 				new BasicStatusLine(new ProtocolVersion("", 1, 2), 403, "any"));
 
 		exception.expect(ForbiddenException.class);
-		connector.makeRequest(method);
+		connector.makeRequest(method,0);
 
 	}
 	
@@ -360,7 +360,7 @@ public class ConnectorTest {
 				new BasicStatusLine(new ProtocolVersion("", 1, 2), 413, "any"));
 
 		exception.expect(IsaacloudConnectionException.class);
-		connector.makeRequest(method);
+		connector.makeRequest(method,0);
 
 	}
 	

@@ -13,6 +13,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -62,6 +64,8 @@ abstract class Connector {
      */
     protected String version;
 
+    private final ReentrantReadWriteLock readWriteLock = new ReentrantReadWriteLock();
+
     /**
      * Url to oauth
      */
@@ -94,6 +98,7 @@ abstract class Connector {
 
     /**
      * Getter for client.
+     *
      * @return current client
      */
     public CloseableHttpClient getHttpClient() {
@@ -102,6 +107,7 @@ abstract class Connector {
 
     /**
      * Get current expiry date.
+     *
      * @return date as long
      */
     public long getCurrentTokenTime() {
@@ -110,6 +116,7 @@ abstract class Connector {
 
     /**
      * Get current authentication token.
+     *
      * @return token as String
      */
     public String getCurrentToken() {
@@ -118,6 +125,7 @@ abstract class Connector {
 
     /**
      * Get version of the api.
+     *
      * @return version as String
      */
     public String getVersion() {
@@ -126,6 +134,7 @@ abstract class Connector {
 
     /**
      * Get the base url to the api.
+     *
      * @return url as String
      */
     public String getBaseUrl() {
@@ -134,6 +143,7 @@ abstract class Connector {
 
     /**
      * Get the oauth url.
+     *
      * @return url as String
      */
     public String getOauthUrl() {
@@ -207,7 +217,7 @@ abstract class Connector {
      *
      * @return HTTPPost for getting Oauth token.
      */
-    protected HttpPost getAuthenticationPost(){
+    protected HttpPost getAuthenticationPost() {
 
         HttpPost method = new HttpPost(this.oauthUrl + "/token");
 
@@ -238,7 +248,7 @@ abstract class Connector {
      *
      * @param response from call execution.
      * @return token as String
-     * @throws IOException connection problems
+     * @throws IOException                  connection problems
      * @throws IsaacloudConnectionException response had an error code
      */
     protected String consumeResponse(CloseableHttpResponse response)
@@ -281,14 +291,24 @@ abstract class Connector {
      * Get the token, if it's outdated then retrieve it from the server.
      *
      * @return token value
-     * @throws IOException connection problems
+     * @throws IOException                  connection problems
      * @throws IsaacloudConnectionException response had an error code
      */
-    protected String getAuthentication() throws IOException,
+    protected String getAuthentication(boolean refresh) throws IOException,
             IsaacloudConnectionException {
 
         // check current time
         long currentTime = System.currentTimeMillis();
+
+        Lock lock;
+
+        if (currentTime > this.currentTokenTime || refresh) {
+            lock = readWriteLock.writeLock();
+        } else {
+            lock = readWriteLock.readLock();
+        }
+
+        lock.lock();
 
         if (currentTime > this.currentTokenTime) {
 
@@ -304,7 +324,9 @@ abstract class Connector {
 
             this.currentTokenTime = currentTime + 3600 * 1000;
         }
-        return "Bearer " + currentToken;
+        String ret = "Bearer " + currentToken;
+        lock.unlock();
+        return ret;
     }
 
     /**
@@ -312,10 +334,10 @@ abstract class Connector {
      *
      * @param method method with parameters
      * @return response object as String
-     * @throws IOException connection problems
+     * @throws IOException                  connection problems
      * @throws IsaacloudConnectionException response had an error code
      */
-    protected Response makeRequest(HttpUriRequest method) throws IOException,
+    protected Response makeRequest(HttpUriRequest method, int ttl) throws IOException,
             IsaacloudConnectionException {
 
         StringBuilder result = new StringBuilder();
@@ -350,7 +372,11 @@ abstract class Connector {
             else if (status == 400)
                 throw new BadRequestException(error);
             else if (status == 401)
-                throw new UnauthorizedException(error);
+                if (error.containsKey("message") && error.get("message") == "expired_token" && ttl < 1) {
+                    method.setHeader("Authorization", getAuthentication(true));
+                    makeRequest(method, 1);
+                } else
+                    throw new UnauthorizedException(error);
             else if (status == 403) {
                 error.put("remark",
                         "Maybe your certificate is expired, in that case use setupSSL method.");
@@ -375,7 +401,12 @@ abstract class Connector {
                     Integer.parseInt(paginatorObject.get("pages").toString()));
         } else {
 
-            JSONObject obj = (JSONObject) JSONValue.parse(result.toString());
+            JSONObject obj;
+
+            if (result.toString().equals(""))
+                obj = new JSONObject();
+            else
+                obj = (JSONObject) JSONValue.parse(result.toString());
 
             return new SimpleResponse(obj);
         }
@@ -385,7 +416,7 @@ abstract class Connector {
     /**
      * Prepares the url with parameters.
      *
-     * @param wholeUri path to be enhanced
+     * @param wholeUri   path to be enhanced
      * @param parameters parameters to be added
      * @return new path
      */
@@ -438,11 +469,11 @@ abstract class Connector {
     /**
      * Constructs a request and send it.
      *
-     * @param methodName  method type as lowercase (get,post,patch,put,delete)
-     * @param uri path of the resource
+     * @param methodName method type as lowercase (get,post,patch,put,delete)
+     * @param uri        path of the resource
      * @param parameters additional parameters
      * @return response as String
-     * @throws IOException connection problem
+     * @throws IOException                  connection problem
      * @throws IsaacloudConnectionException response had an error code
      */
     public Response callService(String uri, String methodName,
@@ -474,7 +505,7 @@ abstract class Connector {
                         + " is not supported.");
         }
 
-        method.addHeader("Authorization", this.getAuthentication());
+        method.addHeader("Authorization", this.getAuthentication(false));
 
         if (body != null) {
             method.addHeader("Content-Type", "application/json charset=utf-8");
@@ -484,7 +515,7 @@ abstract class Connector {
                             ContentType.APPLICATION_JSON));
         }
 
-        return this.makeRequest(method);
+        return this.makeRequest(method, 0);
     }
 
 }

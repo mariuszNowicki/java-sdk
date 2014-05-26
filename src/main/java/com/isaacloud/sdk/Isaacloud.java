@@ -100,7 +100,7 @@ public class Isaacloud extends Connector {
          * @param order list of tuples in form of (fieldName, ASC or DESC)
          * @return updated Caller object
          */
-        public Caller withOrder(Map<String, String> order) {
+        public Caller withOrder(SortedMap<String, String> order) {
             parameters.put("order", order);
             return this;
         }
@@ -110,7 +110,7 @@ public class Isaacloud extends Connector {
          * @param query list of tuples in form of (fieldName,fieldValue)
          * @return updated Caller object
          */
-        public Caller withQuery(Map<String, String> query) {
+        public Caller withQuery(SortedMap<String, String> query) {
             parameters.put("query", query);
             return this;
         }
@@ -318,7 +318,7 @@ public class Isaacloud extends Connector {
      * @throws IsaacloudConnectionException response had an error code
      */
     public String getToken() throws IOException, IsaacloudConnectionException {
-        return getAuthentication();
+        return getAuthentication(false);
     }
 
 }
