@@ -20,7 +20,7 @@ You can also access the [javadocs](http://isaacloud.github.io/java-sdk/).
 1. Clone the repository:
 
     ```
-    git clone https://github.com/com.isaacloud/java-sdk.git
+    git clone https://github.com/isaacloud/java-sdk.git
     ```
 
 2. Enter the directory:
