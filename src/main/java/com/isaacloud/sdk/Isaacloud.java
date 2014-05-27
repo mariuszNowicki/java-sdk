@@ -219,6 +219,14 @@ public class Isaacloud extends Connector {
     }
 
     /**
+     * Constructor for default com.isaacloud.
+     *
+     * @param config - map that contains clientID:clientSecret
+     */
+    public Isaacloud(Map<String, String> config, String api, String oauth, String version) {
+        super(api, oauth, version, config); }
+
+    /**
      * Call to api methods.
      *
      * @param uri path to resource
