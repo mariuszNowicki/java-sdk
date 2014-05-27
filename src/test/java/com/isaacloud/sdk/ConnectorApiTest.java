@@ -179,7 +179,6 @@ public class ConnectorApiTest {
 
         String res = isaac.prepareUrl(called.path,called.parameters);
 
-        System.out.println(res);
         assertEquals(res,expected);
     }
 
