@@ -61,7 +61,7 @@ You can also access the [javadocs](http://isaacloud.github.io/java-sdk/).
 
 ## Overview
 
-To make request calls, you can use the Isaacloud API class. To make a simple request, we first need to specify the path to the resource using the *path* method, then declare the query parameters and lastly use a specific REST method for acquiring the results.
+To make request calls, you can use the Isaacloud API class. To make a simple request, we first need to specify the path to the resource using the *path* method, then declare the query parameters, and lastly, use a specific REST method for acquiring the results.
 Examples of calls:
 
 ```java
