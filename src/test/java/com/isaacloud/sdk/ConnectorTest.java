@@ -15,6 +15,7 @@ import java.util.Map;
 
 import net.minidev.json.JSONObject;
 
+import org.apache.commons.codec.binary.Base64;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.ProtocolVersion;
@@ -144,6 +145,10 @@ public class ConnectorTest {
 	public void testGetAuthentication() throws Exception {
 
 		String token = "aaabbb";
+        String tokenBase = new String(
+                Base64.encodeBase64((config.get("clientId")+ ":" + token)
+                        .getBytes()));
+
 		connector.client = client;
 
 		HttpEntity ent = new StringEntity("{ \"access_token\" : \"" + token
@@ -154,11 +159,11 @@ public class ConnectorTest {
 
 		String res = connector.getAuthentication(false);
 
-		assert (res.equals("Bearer " + token));
+		assert (res.equals("Bearer " + tokenBase));
 
 		res = connector.getAuthentication(false);
 
-		assert (res.equals("Bearer " + token));
+		assert (res.equals("Bearer " + tokenBase));
 		verify(response, times(1)).getEntity();
 	}
 
