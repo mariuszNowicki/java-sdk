@@ -13,8 +13,6 @@ The "com.isaacloud" package contains a special class Isaacloud, which has some n
 
 You can also access the [javadocs](http://isaacloud.github.io/java-sdk/).
 
-## How to build
-
 ## How to build it
 
 1. Clone the repository:
