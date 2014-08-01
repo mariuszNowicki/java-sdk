@@ -9,11 +9,9 @@ The library compiles on **Java version 1.7** and **sbt 0.13.x.**
 ## Basics
 
 This SDK can be used to connect to the Isaacloud v1 REST API on api.com.isaacloud.com.
-The "com.isaacloud" package contains a special class Isaacloud, which contains some nice methods for use in communicating with the API.
+The "com.isaacloud" package contains a special class Isaacloud, which has some nice methods for use in communicating with the API.
 
 You can also access the [javadocs](http://isaacloud.github.io/java-sdk/).
-
-## How to build
 
 ## How to build it
 
@@ -61,7 +59,7 @@ You can also access the [javadocs](http://isaacloud.github.io/java-sdk/).
 
 ## Overview
 
-To make request calls, you can use the Isaacloud API class. To make a simple request, we first need to specify the path to a resource using the *path* method, then declare the query parameters and lastly use a specific REST method for acquiring the results.
+To make request calls, you can use the Isaacloud API class. To make a simple request, we first need to specify the path to the resource using the *path* method, then declare the query parameters, and lastly, use a specific REST method for acquiring the results.
 Examples of calls:
 
 ```java
@@ -82,8 +80,7 @@ try {
 }
 ```
 
-The methods that start with the word with are responsible for narrowing the result set. Each one changes the way the result will be returned by the method. You can combine multiple methods in order to get the desired effect.
-In methods without a certain trait it will be ignored. The list of the methods is presented below:
+The methods that start with the word with are responsible for narrowing the result set. Each one changes the way the results will be returned by the method. You can combine multiple methods in order to get the desired effect. In resources without a certain trait they will be ignored. The list of the methods is presented below:
 
 
 * withFields - narrows the result set to contain only json fields which are in the list of the method
@@ -97,7 +94,7 @@ In methods without a certain trait it will be ignored. The list of the methods i
 
     ```java
     Response response = isaac.path("/cache/users").withPaginator(10l,5l);  
-    //returns 5 elements starting with the tenth
+    //returns 5 elements starting from the 10th one
     ```
 
 * withGroups - returns only the resources containing groups' ids in the list

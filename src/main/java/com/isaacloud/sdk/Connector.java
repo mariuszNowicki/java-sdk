@@ -364,7 +364,16 @@ abstract class Connector {
         response.close();
 
         if (status != 200 && status != 201) {
-            JSONObject error = (JSONObject) JSONValue.parse(result.toString());
+
+            JSONObject error;
+
+            try {
+                error = (JSONObject) JSONValue.parse(result.toString());
+            } catch(Exception e){
+                error = new JSONObject();
+                error.put("message",result.toString());
+            }
+
             if (status == 404)
                 throw new NotFoundException(error);
             else if (status == 500)
@@ -506,6 +515,7 @@ abstract class Connector {
         }
 
         method.addHeader("Authorization", this.getAuthentication(false));
+
 
         if (body != null) {
             method.addHeader("Content-Type", "application/json charset=utf-8");
