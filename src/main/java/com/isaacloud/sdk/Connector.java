@@ -324,9 +324,7 @@ abstract class Connector {
 
             this.currentTokenTime = currentTime + 3600 * 1000;
         }
-        String ret = "Bearer " + new String(
-                Base64.encodeBase64((this.clientId + ":" + currentToken)
-                        .getBytes()));
+        String ret = "Bearer " + currentToken;
         lock.unlock();
         return ret;
     }
