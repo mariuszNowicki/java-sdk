@@ -292,4 +292,4 @@ To delete a user, use the delete method:
 ```
 
 For detailed information about the possible URI calls, available query parameters and request methods please see our documentation:
-https://com.isaacloud.com/documentation
+https://dev.isaacloud.com
