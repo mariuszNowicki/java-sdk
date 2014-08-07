@@ -67,7 +67,7 @@ Map<String, String> config = new HashMap<>();
 config.put("clientId",":your_client_id:");
 config.put("secret",":your_client_secret:");
 
-Map<String, String> order = new HashMap<>();
+SortedMap<String, String> order = new TreeMap<>();
 order.put("email", "ASC");
 
 Isaacloud isaac = new Isaacloud(config);
