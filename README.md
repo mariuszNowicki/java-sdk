@@ -237,7 +237,7 @@ To get the list of users, use the get method:
     config.put("secret",":your_client_secret:");
     Isaacloud isaac = new Isaacloud(config);
 
-    JSONArray users = (JSONArray)isaac.path("cache/users").get().getJson();
+    JSONArray users = (JSONArray)isaac.path("/cache/users").get().getJson();
 ```
 
 ### Create a user
@@ -257,7 +257,7 @@ To create a user, use the post method:
     config.put("secret",":your_client_secret:");
     Isaacloud isaac = new Isaacloud(config);
 
-    JSONObject user = (JSONObject)isaac.path("admin/users").post(user);
+    JSONObject user = (JSONObject)isaac.path("/admin/users").post(user).getJson();
 ```
 
 ### Update a user
@@ -275,7 +275,7 @@ To update a user, use the put method:
     Isaacloud isaac = new Isaacloud(config);
 
     Long id = 1;
-    JSONObject user = (JSONObject)isaac.path("admin/users/"+id).put(user);
+    JSONObject user = (JSONObject)isaac.path("/admin/users/"+id).put(user).getJson();
 ```
 
 ### Delete a user
@@ -288,7 +288,7 @@ To delete a user, use the delete method:
     config.put("secret",":your_client_secret:");
     Isaacloud isaac = new Isaacloud(config);
 
-    isaac.path("admin/users/" + id).delete();
+    isaac.path("/admin/users/" + id).delete();
 ```
 
 For detailed information about the possible URI calls, available query parameters and request methods please see our documentation:
